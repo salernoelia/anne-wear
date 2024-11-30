@@ -15,6 +15,9 @@ const int MAX_RETRIES = 5;
 static bool isAP = false;
 static int retryCount = 0;
 
+// Interval for checking WiFi status (in milliseconds)
+const unsigned long WIFI_CHECK_INTERVAL = 5000; // 5 seconds
+
 // Fixed AP IP configuration (Using a different subnet to avoid conflicts)
 const IPAddress AP_IP(192, 168, 4, 1);
 const IPAddress AP_GATEWAY(192, 168, 4, 1);
@@ -320,4 +323,34 @@ bool destroyAP() {
  */
 bool isAPMode() {
     return isAP;
+}
+
+
+void checkConnectionStatus(bool &lastWiFiStatus, unsigned long &previousWiFiCheck) {
+    unsigned long currentMillis = millis();
+    if (currentMillis - previousWiFiCheck >= WIFI_CHECK_INTERVAL) {
+        previousWiFiCheck = currentMillis;
+
+        if (WiFi.status() != WL_CONNECTED && !isAPMode()) {
+            Serial.println("WiFi disconnected, attempting to reconnect...");
+            bool reconnected = reconnectWiFi();
+            if (reconnected) {
+                lastWiFiStatus = true;
+            } else {
+                lastWiFiStatus = false;
+            }
+        } else if (WiFi.status() == WL_CONNECTED && !lastWiFiStatus) {
+            Serial.println("WiFi connected.");
+            lastWiFiStatus = true;
+        } else if (isAPMode() && WiFi.status() == WL_CONNECTED) {
+            // Handle unexpected scenario where connected to WiFi while in AP mode
+            Serial.println("Connected to WiFi while in AP mode. Stopping AP mode.");
+            bool destroyed = destroyAP();
+            if (destroyed) {
+                Serial.println("AP mode successfully stopped.");
+            } else {
+                Serial.println("Failed to stop Access Point.");
+            }
+        }
+    }
 }
