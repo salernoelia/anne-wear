@@ -10,6 +10,9 @@
 // Create AsyncWebServer object on port 80
 AsyncWebServer server(80);
 
+// Flag to indicate if webserver is started
+static bool webserverStarted = false;
+
 // GET ("/") -> Configuration Form
 void handleRoot(AsyncWebServerRequest *request) {
     String html = "<!DOCTYPE html><html><head><title>Configuration</title></head><body>";
@@ -64,12 +67,23 @@ void handleStatus(AsyncWebServerRequest *request) {
     request->send(200, "application/json", json);
 }
 
+void okHandler(AsyncWebServerRequest *request) {
+    request->send(200, "text/plain", "OK");
+}
+
 // Setup Web Server
 void setupWebServer() {
+    if (webserverStarted) {
+        Serial.println("Web server already started.");
+        return;
+    }
+
     server.on("/", HTTP_GET, handleRoot);
     server.on("/configure", HTTP_POST, handleConfig);
     server.on("/status", HTTP_GET, handleStatus);
-    
+    server.on("/anne-running-check", HTTP_GET, okHandler);
+
     server.begin();
+    webserverStarted = true;
     Serial.println("Web server started on port 80");
 }
