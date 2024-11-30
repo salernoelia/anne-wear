@@ -13,8 +13,23 @@ AsyncWebServer server(80);
 // Flag to indicate if webserver is started
 static bool webserverStarted = false;
 
+// Function to set CORS headers on a response
+void setCorsHeaders(AsyncWebServerResponse *response) {
+    response->addHeader("Access-Control-Allow-Origin", "*");
+    response->addHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+    response->addHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+}
+
 // GET ("/") -> Configuration Form
 void handleRoot(AsyncWebServerRequest *request) {
+    // Handle preflight OPTIONS request
+    if (request->method() == HTTP_OPTIONS) {
+        AsyncWebServerResponse *response = request->beginResponse(200, "text/plain", "");
+        setCorsHeaders(response);
+        request->send(response);
+        return;
+    }
+
     String html = "<!DOCTYPE html><html><head><title>Configuration</title></head><body>";
     html += "<h2>Configure Device</h2>";
     html += "<form action='/configure' method='post'>";
@@ -25,11 +40,21 @@ void handleRoot(AsyncWebServerRequest *request) {
     html += "<input type='submit' value='Save'>";
     html += "</form></body></html>";
 
-    request->send(200, "text/html", html);
+    AsyncWebServerResponse *response = request->beginResponse(200, "text/html", html);
+    setCorsHeaders(response);
+    request->send(response);
 }
 
 // POST ("/configure") -> Save Configuration
 void handleConfig(AsyncWebServerRequest *request) {
+    // Handle preflight OPTIONS request
+    if (request->method() == HTTP_OPTIONS) {
+        AsyncWebServerResponse *response = request->beginResponse(200, "text/plain", "");
+        setCorsHeaders(response);
+        request->send(response);
+        return;
+    }
+
     if (request->hasParam("ssid", true) && request->hasParam("password", true) &&
         request->hasParam("deviceID", true) && request->hasParam("ipaddress", true)) {
 
@@ -40,22 +65,37 @@ void handleConfig(AsyncWebServerRequest *request) {
         config.ipaddress.fromString(ipStr.c_str());
 
         if (saveConfig()) {
-            request->send(200, "text/html", "<!DOCTYPE html><html><head><title>Success</title></head><body><h2>Configuration Saved. Rebooting...</h2></body></html>");
+            String successHtml = "<!DOCTYPE html><html><head><title>Success</title></head><body><h2>Configuration Saved. Rebooting...</h2></body></html>";
+            AsyncWebServerResponse *response = request->beginResponse(200, "text/html", successHtml);
+            setCorsHeaders(response);
+            request->send(response);
             delay(1000);
             ESP.restart();
             return;
         } else { 
-            request->send(500, "text/plain", "Failed to save configuration");
+            AsyncWebServerResponse *response = request->beginResponse(500, "text/plain", "Failed to save configuration");
+            setCorsHeaders(response);
+            request->send(response);
             return;
         }
     }
 
     // Missing parameters
-    request->send(400, "text/plain", "Bad Request: Missing Parameters");
+    AsyncWebServerResponse *response = request->beginResponse(400, "text/plain", "Bad Request: Missing Parameters");
+    setCorsHeaders(response);
+    request->send(response);
 }
 
 // GET ("/status") -> Device Status
 void handleStatus(AsyncWebServerRequest *request) {
+    // Handle preflight OPTIONS request
+    if (request->method() == HTTP_OPTIONS) {
+        AsyncWebServerResponse *response = request->beginResponse(200, "text/plain", "");
+        setCorsHeaders(response);
+        request->send(response);
+        return;
+    }
+
     DynamicJsonDocument doc(1024);
     doc["deviceID"] = config.deviceID;
     doc["ssid"] = config.ssid;
@@ -64,11 +104,25 @@ void handleStatus(AsyncWebServerRequest *request) {
 
     String json;
     serializeJsonPretty(doc, json);
-    request->send(200, "application/json", json);
+    AsyncWebServerResponse *response = request->beginResponse(200, "application/json", json);
+    setCorsHeaders(response);
+    request->send(response);
 }
 
-void okHandler(AsyncWebServerRequest *request) {
-    request->send(200, "text/plain", "OK");
+// GET ("/ok") -> Simple Status Check
+void handleOk(AsyncWebServerRequest *request) {
+    // Handle preflight OPTIONS request
+    if (request->method() == HTTP_OPTIONS) {
+        AsyncWebServerResponse *response = request->beginResponse(200, "text/plain", "");
+        setCorsHeaders(response);
+        request->send(response);
+        return;
+    }
+
+    // Return JSON response
+    AsyncWebServerResponse *response = request->beginResponse(200, "application/json", "{\"status\":\"ok\"}");
+    setCorsHeaders(response);
+    request->send(response);
 }
 
 // Setup Web Server
@@ -81,7 +135,21 @@ void setupWebServer() {
     server.on("/", HTTP_GET, handleRoot);
     server.on("/configure", HTTP_POST, handleConfig);
     server.on("/status", HTTP_GET, handleStatus);
-    server.on("/anne-running-check", HTTP_GET, okHandler);
+    server.on("/ok", HTTP_GET, handleOk);
+
+    // Handle all OPTIONS requests for CORS preflight
+    server.onNotFound([](AsyncWebServerRequest *request){
+        if (request->method() == HTTP_OPTIONS){
+            AsyncWebServerResponse *response = request->beginResponse(200, "text/plain", "");
+            response->addHeader("Access-Control-Allow-Origin", "*");
+            response->addHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+            response->addHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+            request->send(response);
+        }
+        else {
+            request->send(404, "text/plain", "Not Found");
+        }
+    });
 
     server.begin();
     webserverStarted = true;
