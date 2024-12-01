@@ -35,7 +35,8 @@ void handleRoot(AsyncWebServerRequest *request) {
     html += "<form action='/configure' method='post'>";
     html += "WiFi SSID:<br><input type='text' name='ssid' value='" + config.ssid + "' required><br>";
     html += "WiFi Password:<br><input type='password' name='password' value='" + config.password + "' required><br>";
-    html += "Device ID:<br><input type='text' name='deviceID' value='" + config.deviceID + "' required><br>";
+    html += "Device Name:<br><input type='text' name='deviceName' value='" + config.deviceName + "' required><br>";
+    html += "Device ID:<br><p> " + config.deviceID + "</p><br>";
     html += "IP Address:<br><input type='text' name='ipaddress' value='" + config.ipaddress.toString() + "' required><br><br>";
     html += "<input type='submit' value='Save'>";
     html += "</form></body></html>";
@@ -56,11 +57,11 @@ void handleConfig(AsyncWebServerRequest *request) {
     }
 
     if (request->hasParam("ssid", true) && request->hasParam("password", true) &&
-        request->hasParam("deviceID", true) && request->hasParam("ipaddress", true)) {
+        request->hasParam("deviceName", true) && request->hasParam("ipaddress", true)) {
 
         config.ssid = request->getParam("ssid", true)->value();
         config.password = request->getParam("password", true)->value();
-        config.deviceID = request->getParam("deviceID", true)->value();
+        config.deviceName = request->getParam("deviceName", true)->value();
         String ipStr = request->getParam("ipaddress", true)->value();
         config.ipaddress.fromString(ipStr.c_str());
 
@@ -97,7 +98,7 @@ void handleStatus(AsyncWebServerRequest *request) {
     }
 
     DynamicJsonDocument doc(1024);
-    doc["deviceID"] = config.deviceID;
+    doc["deviceName"] = config.deviceName;
     doc["ssid"] = config.ssid;
     doc["password"] = config.password;
     doc["ipaddress"] = config.ipaddress.toString();
