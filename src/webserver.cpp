@@ -72,7 +72,7 @@ void handleConfig(AsyncWebServerRequest *request) {
             request->send(response);
             delay(1000);
             ESP.restart();
-            return;
+            return; 
         } else { 
             AsyncWebServerResponse *response = request->beginResponse(500, "text/plain", "Failed to save configuration");
             setCorsHeaders(response);
