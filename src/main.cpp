@@ -26,6 +26,7 @@ void setup(void)
         Serial.println("Failed to load configuration. Using default settings.");
     };
 
+
     bool connected = initWiFi();
     lastWiFiStatus = connected;
 
@@ -36,7 +37,7 @@ void setup(void)
         M5.Display.setRotation(M5.Display.getRotation() ^ 1);
     }
     M5.Display.setCursor(0, 0);
-    M5.Display.print("REC");
+    M5.Display.print("REC\n");
 
     // Allocate memory for recording data
     rec_data = (int16_t*)heap_caps_malloc(record_size * sizeof(int16_t), MALLOC_CAP_8BIT);

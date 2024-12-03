@@ -8,13 +8,17 @@
 #include <HTTPClient.h>
 #include "mic.h"
 #include <ArduinoJson.h>
+#include "config.h"
 
 // Audio recording variables
 int16_t prev_y[record_length];
 int16_t prev_h[record_length];
 size_t rec_record_idx = 2;
 size_t draw_record_idx = 0;
+
 int16_t* rec_data;
+
+String serverUrl;
 
 // State variable to track recording status
 bool isRecording = false;
@@ -90,7 +94,13 @@ void sendAudioData()
     if (WiFi.status() == WL_CONNECTED)
     {
         HTTPClient http;
-        String serverUrl = "http://192.168.1.112:1323/transcribe";
+        if (config.serverURL == "")
+        {
+            serverUrl = "http://192.168.1.108:1323/ConversationHandler";
+        } else {
+            serverUrl = config.serverURL;
+        }
+       
         http.begin(serverUrl);
         http.addHeader("Content-Type", "application/octet-stream");
 

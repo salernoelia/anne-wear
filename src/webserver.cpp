@@ -32,12 +32,14 @@ void handleRoot(AsyncWebServerRequest *request) {
 
     String html = "<!DOCTYPE html><html><head><title>Configuration</title></head><body>";
     html += "<h2>Configure Device</h2>";
+    html += "IP Address:<br><h1> " + config.ipaddress.toString() + " </h1><br><br>";
     html += "<form action='/configure' method='post'>";
     html += "WiFi SSID:<br><input type='text' name='ssid' value='" + config.ssid + "' required><br>";
     html += "WiFi Password:<br><input type='password' name='password' value='" + config.password + "' required><br>";
     html += "Device Name:<br><input type='text' name='deviceName' value='" + config.deviceName + "' required><br>";
-    html += "Device ID:<br><p> " + config.deviceID + "</p><br>";
-    html += "IP Address:<br><input type='text' name='ipaddress' value='" + config.ipaddress.toString() + "' required><br><br>";
+    html += "Device ID:<br><input type='text' name='deviceID' value='" + config.deviceID + "' required><br>";
+    html += "User ID:<br><input type='text' name='userID' value='" + config.userID + "' required><br>";
+    html += "Server URL:<br><input type='text' name='serverURL' value='" + config.serverURL + "'><br><br>";
     html += "<input type='submit' value='Save'>";
     html += "</form></body></html>";
 
@@ -57,13 +59,17 @@ void handleConfig(AsyncWebServerRequest *request) {
     }
 
     if (request->hasParam("ssid", true) && request->hasParam("password", true) &&
-        request->hasParam("deviceName", true) && request->hasParam("ipaddress", true)) {
+    // request->hasParam("deviceName", true) && request->hasParam("ipaddress", true) &&
+    request->hasParam("userID", true) && request->hasParam("deviceID", true)) {
 
-        config.ssid = request->getParam("ssid", true)->value();
-        config.password = request->getParam("password", true)->value();
-        config.deviceName = request->getParam("deviceName", true)->value();
-        String ipStr = request->getParam("ipaddress", true)->value();
-        config.ipaddress.fromString(ipStr.c_str());
+            config.ssid = request->getParam("ssid", true)->value();
+            config.password = request->getParam("password", true)->value();
+            config.deviceName = request->getParam("deviceName", true)->value();
+            // String ipStr = request->getParam("ipaddress", true)->value();
+            // config.ipaddress.fromString(ipStr.c_str());
+            config.deviceID = request->getParam("deviceID", true)->value();
+            config.userID = request->getParam("userID", true)->value();
+            config.serverURL = request->getParam("serverURL", true)->value();
 
         if (saveConfig()) {
             String successHtml = "<!DOCTYPE html><html><head><title>Success</title></head><body><h2>Configuration Saved. Rebooting...</h2></body></html>";
@@ -83,29 +89,6 @@ void handleConfig(AsyncWebServerRequest *request) {
 
     // Missing parameters
     AsyncWebServerResponse *response = request->beginResponse(400, "text/plain", "Bad Request: Missing Parameters");
-    setCorsHeaders(response);
-    request->send(response);
-}
-
-// GET ("/status") -> Device Status
-void handleStatus(AsyncWebServerRequest *request) {
-    // Handle preflight OPTIONS request
-    if (request->method() == HTTP_OPTIONS) {
-        AsyncWebServerResponse *response = request->beginResponse(200, "text/plain", "");
-        setCorsHeaders(response);
-        request->send(response);
-        return;
-    }
-
-    DynamicJsonDocument doc(1024);
-    doc["deviceName"] = config.deviceName;
-    doc["ssid"] = config.ssid;
-    doc["password"] = config.password;
-    doc["ipaddress"] = config.ipaddress.toString();
-
-    String json;
-    serializeJsonPretty(doc, json);
-    AsyncWebServerResponse *response = request->beginResponse(200, "application/json", json);
     setCorsHeaders(response);
     request->send(response);
 }
@@ -135,7 +118,6 @@ void setupWebServer() {
 
     server.on("/", HTTP_GET, handleRoot);
     server.on("/configure", HTTP_POST, handleConfig);
-    server.on("/status", HTTP_GET, handleStatus);
     server.on("/ok", HTTP_GET, handleOk);
 
     // Handle all OPTIONS requests for CORS preflight

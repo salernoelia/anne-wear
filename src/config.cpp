@@ -9,14 +9,18 @@ const char* configPath = "/config.json";
 
 // Initialize the global config variable with default values
 Config config = {
-    "715e4fe4-e04a-406d-8282-8f92ddb464cc", // deviceID
-    "anne",                                // deviceName
-    "anne-wear",                           // apSSID
-    "anne-wear",                           // apPassword
-    "",                                     // ssid
-    "",                                     // password
-    IPAddress(192, 168, 1, 118)            // ipaddress
+    "1", // deviceID
+    "0bd27db1-05af-405d-b707-eaa9d85b1623",                      // userID
+    "anne",                                 // deviceName
+    "anne-wear",                            // apSSID
+    "anne-wear",                            // apPassword
+    "xxxx",                                // ssid
+    "xxxx",                           // password
+    IPAddress(192, 168, 1, 118),            // ipaddress
+    "http://192.168.1.108:1323/ConversationHandler" // serverURL
 };
+
+
 
 // Function to load configuration from SPIFFS
 bool loadConfig() {
@@ -60,8 +64,11 @@ bool loadConfig() {
     }
 
     // Assign values to config with checks
-    if (doc.containsKey("deviceID")) {
+     if (doc.containsKey("deviceID")) {
         config.deviceID = doc["deviceID"].as<String>();
+    }
+    if (doc.containsKey("userID")) {
+        config.userID = doc["userID"].as<String>();
     }
     if (doc.containsKey("deviceName")) {
         config.deviceName = doc["deviceName"].as<String>();
@@ -82,6 +89,9 @@ bool loadConfig() {
         String ipStr = doc["ipaddress"].as<String>();
         config.ipaddress.fromString(ipStr.c_str());
     }
+    if (doc.containsKey("serverURL")) {
+        config.serverURL = doc["serverURL"].as<String>();
+    }
 
     Serial.println("Configuration loaded:");
     serializeJsonPretty(doc, Serial);
@@ -99,12 +109,14 @@ bool saveConfig() {
 
     DynamicJsonDocument doc(2048); // Increased size
     doc["deviceID"] = config.deviceID;
+    doc["userID"] = config.userID;
     doc["deviceName"] = config.deviceName;
     doc["apSSID"] = config.apSSID;
     doc["apPassword"] = config.apPassword;
     doc["ssid"] = config.ssid;
     doc["password"] = config.password;
     doc["ipaddress"] = config.ipaddress.toString();
+    doc["serverURL"] = config.serverURL;
 
     File file = SPIFFS.open(configPath, "w");
     if (!file) {

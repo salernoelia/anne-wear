@@ -6,9 +6,10 @@
 #include "wifisetup.h"
 #include "M5Unified.h"
 #include "webserver.h"
+#include <mic.h>
 
 // Constants
-const unsigned long WIFI_CONNECTION_TIMEOUT = 5000; // 5 seconds
+const unsigned long WIFI_CONNECTION_TIMEOUT = 15000;
 const int MAX_RETRIES = 5;
 
 // Variables
@@ -16,7 +17,7 @@ static bool isAP = false;
 static int retryCount = 0;
 
 // Interval for checking WiFi status (in milliseconds)
-const unsigned long WIFI_CHECK_INTERVAL = 5000; // 5 seconds
+const unsigned long WIFI_CHECK_INTERVAL = 15000;
 
 // Fixed AP IP configuration (Using a different subnet to avoid conflicts)
 const IPAddress AP_IP(192, 168, 4, 1);
@@ -44,10 +45,13 @@ bool initWiFi() {
     M5.Lcd.println("Connecting to WiFi...");
 
     // Attempt to connect to WiFi
-    Serial.print("Connecting to WiFi SSID: ");
-    Serial.println(config.ssid);
     WiFi.mode(WIFI_STA);
-    WiFi.begin(config.ssid.c_str(), config.password.c_str());
+    WiFi.begin(config.ssid, config.password);
+
+    Serial.println(config.ssid);
+
+    M5.Lcd.print("Connecting to: ");
+    M5.Lcd.println(config.ssid);
 
     unsigned long startAttemptTime = millis();
 
@@ -98,6 +102,9 @@ bool initWiFi() {
         Serial.println();
         Serial.println("Failed to connect to WiFi within timeout.");
         Serial.println("Starting Access Point...");
+
+
+        config.ipaddress = AP_IP;
 
         // Start Access Point
         if (startAP()) {
@@ -350,6 +357,7 @@ void checkConnectionStatus(bool &lastWiFiStatus, unsigned long &previousWiFiChec
                 Serial.println("AP mode successfully stopped.");
             } else {
                 Serial.println("Failed to stop Access Point.");
+                Serial.println("Wifi is connected:" + WL_CONNECTED);
             }
         }
     }

@@ -10,6 +10,7 @@ extern const char* configPath;
 // Default Configuration Structure Declaration
 struct Config {
     String deviceID;
+    String userID;
     String deviceName;
     String apSSID;
     String apPassword;
@@ -17,6 +18,7 @@ struct Config {
     String ssid;
     String password;
     IPAddress ipaddress;
+    String serverURL;
 };
 
 // External declaration of the global config variable
