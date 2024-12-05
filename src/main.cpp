@@ -8,6 +8,7 @@
 #include "requests.h"
 #include "ui.h"
 #include "rtc.h"
+#include "battery.h"
 
 // Variables to track Wi-Fi status
 unsigned long previousWiFiCheck = 0;
@@ -17,6 +18,7 @@ bool lastWiFiStatus = false; // false: not connected, true: connected
 TaskHandle_t micTaskHandle = NULL;
 TaskHandle_t rtcTaskHandle = NULL;
 TaskHandle_t wifiTaskHandle = NULL;
+TaskHandle_t batteryTaskHandle = NULL;
 
 // Mutex handle
 SemaphoreHandle_t wifiMutex;
@@ -42,6 +44,13 @@ void wifiTask(void * pvParameters) {
         xSemaphoreGive(wifiMutex);
 
         vTaskDelay(1000 / portTICK_PERIOD_MS);
+    }
+}
+
+void batteryTask(void * pvParameters) {
+    for (;;) {
+        batteryLevel();
+        vTaskDelay(10000 / portTICK_PERIOD_MS);
     }
 }
 
@@ -81,6 +90,7 @@ void setup(void)
     xTaskCreatePinnedToCore(micTask, "Mic Task", 4096, NULL, 1, &micTaskHandle, 1);
     xTaskCreatePinnedToCore(rtcTask, "RTC Task", 2048, NULL, 1, &rtcTaskHandle, 1);
     xTaskCreatePinnedToCore(wifiTask, "WiFi Task", 2048, NULL, 1, &wifiTaskHandle, 1);
+    xTaskCreatePinnedToCore(batteryTask, "Battery Task", 2048, NULL, 1, &batteryTaskHandle, 1);
 }
 
 void loop() {
