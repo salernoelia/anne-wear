@@ -10,6 +10,7 @@
 // Create AsyncWebServer object on port 80
 AsyncWebServer server(80);
 
+
 // Flag to indicate if webserver is started
 static bool webserverStarted = false;
 
@@ -40,6 +41,14 @@ void handleRoot(AsyncWebServerRequest *request) {
     html += "Device ID:<br><input type='text' name='deviceID' value='" + config.deviceID + "' required><br>";
     html += "User ID:<br><input type='text' name='userID' value='" + config.userID + "' required><br>";
     html += "Server URL:<br><input type='text' name='serverURL' value='" + config.serverURL + "'><br><br>";
+
+    String languageOptionEn = (config.language == "en") ? "selected" : "";
+    String languageOptionDe = (config.language == "de") ? "selected" : "";
+
+    html += "<select name='language' id='language'>";
+    html += "<option value='en' " + languageOptionEn + ">English</option>";
+    html += "<option value='de' " + languageOptionDe + ">Deutsch</option>";
+    html += "</select><br><br>";
     html += "<input type='submit' value='Save'>";
     html += "</form></body></html>";
 
@@ -70,6 +79,11 @@ void handleConfig(AsyncWebServerRequest *request) {
             config.deviceID = request->getParam("deviceID", true)->value();
             config.userID = request->getParam("userID", true)->value();
             config.serverURL = request->getParam("serverURL", true)->value();
+            if (request->hasParam("language", true)) {
+                config.language = request->getParam("language", true)->value();
+            } else {
+                config.language = "en";
+            }
 
         if (saveConfig()) {
             String successHtml = "<!DOCTYPE html><html><head><title>Success</title></head><body><h2>Configuration Saved. Rebooting...</h2></body></html>";

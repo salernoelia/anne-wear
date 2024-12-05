@@ -14,7 +14,7 @@ struct Config {
     String deviceName;
     String apSSID;
     String apPassword;
-
+    String language;
     String ssid;
     String password;
     IPAddress ipaddress;

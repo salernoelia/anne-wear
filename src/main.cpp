@@ -6,6 +6,8 @@
 #include "mic.h"
 #include "config.h"
 #include "wifisetup.h"
+#include "requests.h"
+#include "ui.h"
 
 
 // Variables to track Wi-Fi status
@@ -26,18 +28,11 @@ void setup(void)
         Serial.println("Failed to load configuration. Using default settings.");
     };
 
-
     bool connected = initWiFi();
     lastWiFiStatus = connected;
 
-    // Initialize display
-    M5.Display.startWrite();
-    if (M5.Display.width() > M5.Display.height())
-    {
-        M5.Display.setRotation(M5.Display.getRotation() ^ 1);
-    }
-    M5.Display.setCursor(0, 0);
-    M5.Display.print("REC\n");
+    initScreen();
+
 
     // Allocate memory for recording data
     rec_data = (int16_t*)heap_caps_malloc(record_size * sizeof(int16_t), MALLOC_CAP_8BIT);
@@ -50,11 +45,10 @@ void setup(void)
 }
 
 void loop() {
-    M5.update(); // Handle background tasks
+    M5.update();
 
     checkConnectionStatus(lastWiFiStatus, previousWiFiCheck);
 
-    // Update microphone and recording
     updateMic();
 
     delay(10);

@@ -5,10 +5,10 @@
 #include <M5Unified.h>
 #include <Arduino.h>
 #include <WiFi.h>
-#include <HTTPClient.h>
 #include "mic.h"
 #include <ArduinoJson.h>
 #include "config.h"
+#include "requests.h"
 
 // Audio recording variables
 int16_t prev_y[record_length];
@@ -18,7 +18,7 @@ size_t draw_record_idx = 0;
 
 int16_t* rec_data;
 
-String serverUrl;
+
 
 // State variable to track recording status
 bool isRecording = false;
@@ -28,6 +28,7 @@ void updateMic()
     // Check if Button A is being held
     if (M5.BtnA.isHolding())
     {
+        M5.Display.clear();
         if (!isRecording)
         {
             // Start recording
@@ -93,44 +94,9 @@ void sendAudioData()
 
     if (WiFi.status() == WL_CONNECTED)
     {
-        HTTPClient http;
-        if (config.serverURL == "")
-        {
-            serverUrl = "http://192.168.1.108:1323/ConversationHandler";
-        } else {
-            serverUrl = config.serverURL;
-        }
-       
-        http.begin(serverUrl);
-        http.addHeader("Content-Type", "application/octet-stream");
-        http.addHeader("X-User-ID", config.userID);
-        http.addHeader("X-Device-ID", config.deviceID);
-
-        // Prepare audio data
-        int totalSize = record_size * sizeof(int16_t);
-        uint8_t* audioData = (uint8_t*)rec_data;
-
-        int httpResponseCode = http.POST(audioData, totalSize);
-
-        if (httpResponseCode > 0) {
-            String response = http.getString();
-            Serial.println("HTTP Response code: " + String(httpResponseCode));
-            Serial.println("Response: " + response);
-
-            // Parse the JSON response and display the transcription (if needed)
-            // Example:
-            DynamicJsonDocument doc(1024);
-            deserializeJson(doc, response);
-            String transcription = doc["transcription"];
-            M5.Display.clear();
-            M5.Display.setCursor(0, 0);
-            M5.Display.print(transcription);
-        }
-        else {
-            Serial.println("Error on sending POST: " + String(httpResponseCode));
-        }
-
-        http.end();
+        Serial.println("Sending audio data...");
+        sendAudioRequest(rec_data, record_size);
+  
     }
     else
     {

@@ -14,6 +14,7 @@ Config config = {
     "anne",                                 // deviceName
     "anne-wear",                            // apSSID
     "anne-wear",                            // apPassword
+    "en",                                   // language
     "xxxx",                                // ssid
     "xxxx",                           // password
     IPAddress(192, 168, 1, 118),            // ipaddress
