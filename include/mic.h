@@ -4,13 +4,13 @@
 
 #include <M5Unified.h>
 
-void initializeMic();
+void initMic();
 void updateMic();
 void sendAudioData();
 
 constexpr size_t record_number = 256;
 constexpr size_t record_length = 200;
-constexpr size_t record_size = record_number * record_length;
+static constexpr const size_t record_size = record_number * record_length;
 constexpr size_t record_samplerate = 16000;
 
 extern int16_t* rec_data;

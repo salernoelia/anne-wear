@@ -64,8 +64,7 @@ void animateAudioWave (
                 }
                 M5.Display.display();
 
-                if (++draw_record_idx >= record_number) { draw_record_idx = 0; }
-                if (++rec_record_idx >= record_number) { rec_record_idx = 0; }
+
 }
 
 void displayHomeScreen() {

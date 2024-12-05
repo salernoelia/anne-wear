@@ -20,6 +20,23 @@ int16_t* rec_data;
 // State variable to track recording status
 bool isRecording = false;
 
+void initMic()
+{
+    // Initialize the microphone
+    M5.Mic.begin();
+
+    rec_data = (int16_t*)heap_caps_malloc(record_size * sizeof(int16_t), MALLOC_CAP_8BIT);
+    if (rec_data == NULL) {
+        Serial.println("Failed to allocate memory for rec_data");
+
+
+    }
+
+    memset(rec_data, 0 , record_size * sizeof(int16_t));
+    M5.Speaker.setVolume(255);
+
+}
+
 void updateMic()
 {
     // Check if Button A is being held
@@ -31,7 +48,7 @@ void updateMic()
             // Start recording
             Serial.println("Button A pressed. Starting recording...");
             isRecording = true;
-            memset(rec_data, 0, record_size * sizeof(int16_t)); // Clear previous data
+            memset(rec_data, 0, record_size * sizeof(int16_t));
             rec_record_idx = 0;
             draw_record_idx = 0;
         }
@@ -55,6 +72,13 @@ void updateMic()
                      rec_record_idx, 
                      rec_data
                );
+
+            if (++rec_record_idx >= record_number) { rec_record_idx = 0; }
+            if (++draw_record_idx >= record_number) { draw_record_idx = 0; }
+            }
+            else 
+            {
+            Serial.println("Recording failed");
             }
         }
     }
@@ -81,6 +105,8 @@ void sendAudioData()
     if (WiFi.status() == WL_CONNECTED)
     {
         Serial.println("Sending audio data...");
+        Serial.println("Record size: " + String(record_size));
+        
         sendAudioRequest(rec_data, record_size);
   
     }

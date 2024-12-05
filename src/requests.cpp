@@ -24,6 +24,7 @@ void sendAudioRequest(
 
         // Prepare audio data
         int totalSize = record_size * sizeof(int16_t);
+
         uint8_t* audioData = (uint8_t*)rec_data;
 
         int httpResponseCode = http.POST(audioData, totalSize);

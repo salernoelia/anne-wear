@@ -70,18 +70,16 @@ void setup(void)
 
     bool connected = initWiFi();
     lastWiFiStatus = connected;
+    
+    M5.Speaker.end();
+
 
     initScreen();
     initRTC();
+    initMic();
 
-    // Allocate memory for recording data
-    rec_data = (int16_t*)heap_caps_malloc(record_size * sizeof(int16_t), MALLOC_CAP_8BIT);
-    memset(rec_data, 0, record_size * sizeof(int16_t));
-    M5.Speaker.setVolume(255);
-
+    
     // Turn off the speaker to use the microphone
-    M5.Speaker.end();
-    M5.Mic.begin();
 
     // Create a mutex
     wifiMutex = xSemaphoreCreateMutex();
