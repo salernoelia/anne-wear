@@ -1,3 +1,7 @@
 {
-  "idf.port": "/dev/tty.wchusbserial575C0295301"
+  "idf.port": "/dev/tty.wchusbserial575C0295301",
+  "files.associations": {
+    ".fantomasignore": "ignore",
+    "memory": "cpp"
+  }
 }

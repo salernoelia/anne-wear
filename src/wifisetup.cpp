@@ -38,7 +38,8 @@ const char* mdnsHostname = "anne-wear";
  */
 bool initWiFi() {
     // Display initial status on LCD
-    M5.Lcd.fillScreen(TFT_BLACK);
+    M5.Lcd.clear();
+    M5.Lcd.setRotation(1);
     M5.Lcd.setTextSize(2);
     M5.Lcd.setTextColor(TFT_WHITE, TFT_BLACK);
     M5.Lcd.setCursor(0, 0);
@@ -52,6 +53,8 @@ bool initWiFi() {
 
     M5.Lcd.print("Connecting to: ");
     M5.Lcd.println(config.ssid);
+
+    M5.Lcd.clear();
 
     unsigned long startAttemptTime = millis();
 

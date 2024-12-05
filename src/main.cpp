@@ -1,4 +1,3 @@
-// main.cpp
 #include <Arduino.h>
 #include <M5Unified.h>
 #include <WiFi.h>
@@ -8,11 +7,43 @@
 #include "wifisetup.h"
 #include "requests.h"
 #include "ui.h"
-
+#include "rtc.h"
 
 // Variables to track Wi-Fi status
 unsigned long previousWiFiCheck = 0;
 bool lastWiFiStatus = false; // false: not connected, true: connected
+
+// Task handles
+TaskHandle_t micTaskHandle = NULL;
+TaskHandle_t rtcTaskHandle = NULL;
+TaskHandle_t wifiTaskHandle = NULL;
+
+// Mutex handle
+SemaphoreHandle_t wifiMutex;
+
+void micTask(void * pvParameters) {
+    for (;;) {
+        updateMic();
+        vTaskDelay(10 / portTICK_PERIOD_MS);
+    }
+}
+
+void rtcTask(void * pvParameters) {
+    for (;;) {
+        updateRTC();
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
+    }
+}
+
+void wifiTask(void * pvParameters) {
+    for (;;) {
+        xSemaphoreTake(wifiMutex, portMAX_DELAY);
+        checkConnectionStatus(lastWiFiStatus, previousWiFiCheck);
+        xSemaphoreGive(wifiMutex);
+
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
+    }
+}
 
 void setup(void)
 {
@@ -32,7 +63,7 @@ void setup(void)
     lastWiFiStatus = connected;
 
     initScreen();
-
+    initRTC();
 
     // Allocate memory for recording data
     rec_data = (int16_t*)heap_caps_malloc(record_size * sizeof(int16_t), MALLOC_CAP_8BIT);
@@ -42,14 +73,17 @@ void setup(void)
     // Turn off the speaker to use the microphone
     M5.Speaker.end();
     M5.Mic.begin();
+
+    // Create a mutex
+    wifiMutex = xSemaphoreCreateMutex();
+
+    // Create tasks
+    xTaskCreatePinnedToCore(micTask, "Mic Task", 4096, NULL, 1, &micTaskHandle, 1);
+    xTaskCreatePinnedToCore(rtcTask, "RTC Task", 2048, NULL, 1, &rtcTaskHandle, 1);
+    xTaskCreatePinnedToCore(wifiTask, "WiFi Task", 2048, NULL, 1, &wifiTaskHandle, 1);
 }
 
 void loop() {
     M5.update();
-
-    checkConnectionStatus(lastWiFiStatus, previousWiFiCheck);
-
-    updateMic();
-
     delay(10);
 }
