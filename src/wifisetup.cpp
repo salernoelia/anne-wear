@@ -38,12 +38,12 @@ const char* mdnsHostname = "anne-wear";
  */
 bool initWiFi() {
     // Display initial status on LCD
-    M5.Lcd.clear();
-    M5.Lcd.setRotation(1);
-    M5.Lcd.setTextSize(2);
-    M5.Lcd.setTextColor(TFT_WHITE, TFT_BLACK);
-    M5.Lcd.setCursor(0, 0);
-    M5.Lcd.println("Connecting to WiFi...");
+    M5.Display.clear();
+    M5.Display.setRotation(1);
+    M5.Display.setTextSize(2);
+    M5.Display.setTextColor(TFT_WHITE, TFT_BLACK);
+    M5.Display.setCursor(0, 0);
+    M5.Display.println("Connecting to WiFi...");
 
     // Attempt to connect to WiFi
     WiFi.mode(WIFI_STA);
@@ -51,10 +51,10 @@ bool initWiFi() {
 
     Serial.println(config.ssid);
 
-    M5.Lcd.print("Connecting to: ");
-    M5.Lcd.println(config.ssid);
+    M5.Display.print("Connecting to: ");
+    M5.Display.println(config.ssid);
 
-    M5.Lcd.clear();
+    M5.Display.clear();
 
     unsigned long startAttemptTime = millis();
 
@@ -62,7 +62,7 @@ bool initWiFi() {
     while (WiFi.status() != WL_CONNECTED && 
            millis() - startAttemptTime < WIFI_CONNECTION_TIMEOUT) {
         Serial.print(".");
-        M5.Lcd.print("."); // Update LCD with connection attempts
+        M5.Display.print("."); // Update LCD with connection attempts
         delay(500);
     }
 
@@ -86,12 +86,12 @@ bool initWiFi() {
         }
 
         // Display configuration on LCD
-        M5.Lcd.fillScreen(TFT_BLACK);
-        M5.Lcd.setCursor(0, 0);
-        M5.Lcd.println("WiFi Connected!");
-        M5.Lcd.println("Device ID: " + config.deviceID);
-        M5.Lcd.println("SSID: " + config.ssid);
-        M5.Lcd.println("IP Address: " + config.ipaddress.toString());
+        M5.Display.fillScreen(TFT_BLACK);
+        M5.Display.setCursor(0, 0);
+        M5.Display.println("WiFi Connected!");
+        M5.Display.println("Device ID: " + config.deviceID);
+        M5.Display.println("SSID: " + config.ssid);
+        M5.Display.println("IP Address: " + config.ipaddress.toString());
 
         // Print configuration to Serial
         Serial.println("Device ID: " + config.deviceID);
@@ -168,12 +168,12 @@ bool reconnectWiFi() {
         }
 
         // Update LCD
-        M5.Lcd.fillScreen(TFT_BLACK);
-        M5.Lcd.setCursor(0, 0);
-        M5.Lcd.println("WiFi Connected!");
-        M5.Lcd.println("Device ID: " + config.deviceID);
-        M5.Lcd.println("SSID: " + config.ssid);
-        M5.Lcd.println("IP Address: " + config.ipaddress.toString());
+        M5.Display.fillScreen(TFT_BLACK);
+        M5.Display.setCursor(0, 0);
+        M5.Display.println("WiFi Connected!");
+        M5.Display.println("Device ID: " + config.deviceID);
+        M5.Display.println("SSID: " + config.ssid);
+        M5.Display.println("IP Address: " + config.ipaddress.toString());
 
         // Restart web server
         setupWebServer();
@@ -247,13 +247,13 @@ bool startAP() {
         }
 
         // Display AP details on LCD
-        M5.Lcd.fillScreen(TFT_BLACK);
-        M5.Lcd.setCursor(0, 0);
-        M5.Lcd.println("Device is in AP mode");
-        M5.Lcd.println("Device IP: " + WiFi.softAPIP().toString());
-        M5.Lcd.println("Device ID: " + config.deviceID);
-        M5.Lcd.println("SSID: " + config.apSSID);
-        M5.Lcd.println("Password: " + config.apPassword);
+        M5.Display.fillScreen(TFT_BLACK);
+        M5.Display.setCursor(0, 0);
+        M5.Display.println("Device is in AP mode");
+        M5.Display.println("Device IP: " + WiFi.softAPIP().toString());
+        M5.Display.println("Device ID: " + config.deviceID);
+        M5.Display.println("SSID: " + config.apSSID);
+        M5.Display.println("Password: " + config.apPassword);
 
         // Setup web server for AP mode
         setupWebServer();
@@ -292,10 +292,10 @@ bool destroyAP() {
         isAP = false;
 
         // Clear or update LCD as needed
-        M5.Lcd.fillScreen(TFT_BLACK);
-        M5.Lcd.setCursor(0, 0);
-        M5.Lcd.println("WiFi Disconnected");
-        M5.Lcd.println("Attempting to reconnect...");
+        M5.Display.fillScreen(TFT_BLACK);
+        M5.Display.setCursor(0, 0);
+        M5.Display.println("WiFi Disconnected");
+        M5.Display.println("Attempting to reconnect...");
         return true;
     } else {
         Serial.println("Failed to stop Access Point.");
@@ -313,10 +313,10 @@ bool destroyAP() {
             MDNS.end();
 
             // Clear or update LCD as needed
-            M5.Lcd.fillScreen(TFT_BLACK);
-            M5.Lcd.setCursor(0, 0);
-            M5.Lcd.println("WiFi Disconnected");
-            M5.Lcd.println("Attempting to reconnect...");
+            M5.Display.fillScreen(TFT_BLACK);
+            M5.Display.setCursor(0, 0);
+            M5.Display.println("WiFi Disconnected");
+            M5.Display.println("Attempting to reconnect...");
 
             return true;
         } else {

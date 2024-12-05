@@ -11,10 +11,10 @@ void setup(void)
     M5.begin(cfg);
 
     // Initialize the LCD
-    M5.Lcd.fillScreen(TFT_BLACK);
-    M5.Lcd.setTextSize(2); // Set text size (Note: `setTextSize` might not be available; use `setTextFont` instead)
-    M5.Lcd.setTextColor(TFT_WHITE, TFT_BLACK); // Set text color with background
-    M5.Lcd.setCursor(0, 0); // Set initial cursor position
+    M5.Display.fillScreen(TFT_BLACK);
+    M5.Display.setTextSize(2); // Set text size (Note: `setTextSize` might not be available; use `setTextFont` instead)
+    M5.Display.setTextColor(TFT_WHITE, TFT_BLACK); // Set text color with background
+    M5.Display.setCursor(0, 0); // Set initial cursor position
 }
 
 void loop() {
@@ -26,20 +26,20 @@ void loop() {
 
         // Clear the area where the temperature is displayed
         // Increase the height to accommodate larger text
-        M5.Lcd.fillRect(0, 0, M5.Lcd.width(), 24, TFT_BLACK);
+        M5.Display.fillRect(0, 0, M5.Display.width(), 24, TFT_BLACK);
 
         // Display the new temperature
-        M5.Lcd.setCursor(0, 0);
-        M5.Lcd.printf("Temperature: %.2f °C", temperature);
+        M5.Display.setCursor(0, 0);
+        M5.Display.printf("Temperature: %.2f °C", temperature);
     } else {
         Serial.println("Failed to read temperature.");
 
         // Clear the area where the error message is displayed
-        M5.Lcd.fillRect(0, 0, M5.Lcd.width(), 24, TFT_BLACK);
+        M5.Display.fillRect(0, 0, M5.Display.width(), 24, TFT_BLACK);
 
         // Display the error message
-        M5.Lcd.setCursor(0, 0);
-        M5.Lcd.println("Failed to read temperature.");
+        M5.Display.setCursor(0, 0);
+        M5.Display.println("Failed to read temperature.");
     }
 
     delay(1000); // Wait for 1 second

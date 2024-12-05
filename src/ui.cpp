@@ -8,11 +8,11 @@ bool needsScreenClear = false;
 
 void initScreen() {
 
-    M5.Lcd.startWrite();
-    M5.Lcd.setRotation(1);
-    M5.Lcd.setCursor(0, 0);
-    M5.Lcd.print("REC\n");
-    M5.Lcd.setTextSize(1.5);
+    M5.Display.startWrite();
+    M5.Display.setRotation(1);
+    M5.Display.setCursor(0, 0);
+    M5.Display.print("REC\n");
+    M5.Display.setTextSize(1.5);
 }
 
 void animateAudioWave (
@@ -31,6 +31,8 @@ void animateAudioWave (
                 if (needsScreenClear == false) {
                     needsScreenClear = true;
                 }
+
+                M5.Display.setCursor(0, 0);
 
                 int32_t w = M5.Display.width();
                 Serial.println(w);
