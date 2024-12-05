@@ -7,7 +7,6 @@
 #include "config.h"
 #include "webserver.h"
 
-// Create AsyncWebServer object on port 80
 AsyncWebServer server(80);
 
 
@@ -31,26 +30,99 @@ void handleRoot(AsyncWebServerRequest *request) {
         return;
     }
 
-    String html = "<!DOCTYPE html><html><head><title>Configuration</title></head><body>";
+    String html = "<!DOCTYPE html><html><head><title>Configuration</title>";
+    html += "<style>";
+    html += "body {";
+    html += "    font-family: Arial, sans-serif;";
+    html += "    background-color: #f2f2f2;";
+    html += "    margin: 0;";
+    html += "    padding: 0;";
+    html += "}";
+    html += ".container {";
+    html += "    width: 50%;";
+    html += "    margin: 50px auto;";
+    html += "    background-color: #fff;";
+    html += "    padding: 20px;";
+    html += "    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);";
+    html += "    border-radius: 8px;";
+    html += "}";
+    html += "h2 {";
+    html += "    text-align: center;";
+    html += "    color: #333;";
+    html += "}";
+    html += ".ip-address {";
+    html += "    text-align: center;";
+    html += "    margin-bottom: 20px;";
+    html += "}";
+    html += ".ip-address h1 {";
+    html += "    color: #4CAF50;";
+    html += "    margin: 10px 0;";
+    html += "}";
+    html += "form {";
+    html += "    display: flex;";
+    html += "    flex-direction: column;";
+    html += "}";
+    html += "label {";
+    html += "    margin-bottom: 5px;";
+    html += "    color: #555;";
+    html += "}";
+    html += "input[type='text'], input[type='password'], select {";
+    html += "    padding: 10px;";
+    html += "    margin-bottom: 15px;";
+    html += "    border: 1px solid #ccc;";
+    html += "    border-radius: 4px;";
+    html += "    font-size: 16px;";
+    html += "}";
+    html += "input[type='submit'] {";
+    html += "    padding: 10px;";
+    html += "    background-color: #4CAF50;";
+    html += "    color: white;";
+    html += "    border: none;";
+    html += "    border-radius: 4px;";
+    html += "    cursor: pointer;";
+    html += "    font-size: 16px;";
+    html += "}";
+    html += "input[type='submit']:hover {";
+    html += "    background-color: #45a049;";
+    html += "}";
+    html += "</style>";
+    html += "</head><body>";
+    html += "<div class='container'>";
     html += "<h2>Configure Device</h2>";
-    html += "IP Address:<br><h1> " + config.ipaddress.toString() + " </h1><br><br>";
+    html += "<div class='ip-address'>IP Address:<br><h1>" + config.ipaddress.toString() + "</h1></div>";
     html += "<form action='/configure' method='post'>";
-    html += "WiFi SSID:<br><input type='text' name='ssid' value='" + config.ssid + "' required><br>";
-    html += "WiFi Password:<br><input type='password' name='password' value='" + config.password + "' required><br>";
-    html += "Device Name:<br><input type='text' name='deviceName' value='" + config.deviceName + "' required><br>";
-    html += "Device ID:<br><input type='text' name='deviceID' value='" + config.deviceID + "' required><br>";
-    html += "User ID:<br><input type='text' name='userID' value='" + config.userID + "' required><br>";
-    html += "Server URL:<br><input type='text' name='serverURL' value='" + config.serverURL + "'><br><br>";
+    html += "<label for='ssid'>WiFi SSID:</label>";
+    html += "<input type='text' id='ssid' name='ssid' value='" + config.ssid + "' required>";
 
-    String languageOptionEn = (config.language == "en") ? "selected" : "";
-    String languageOptionDe = (config.language == "de") ? "selected" : "";
+    html += "<label for='password'>WiFi Password:</label>";
+    html += "<input type='password' id='password' name='password' value='" + config.password + "' required>";
 
+    html += "<label for='deviceName'>Device Name:</label>";
+    html += "<input type='text' id='deviceName' name='deviceName' value='" + config.deviceName + "' required>";
+
+    html += "<label for='deviceID'>Device ID:</label>";
+    html += "<input type='text' id='deviceID' name='deviceID' value='" + config.deviceID + "' required>";
+
+    html += "<label for='userID'>User ID:</label>";
+    html += "<input type='text' id='userID' name='userID' value='" + config.userID + "' required>";
+
+    html += "<label for='serverURL'>Server URL:</label>";
+    html += "<input type='text' id='serverURL' name='serverURL' value='" + config.serverURL + "'>";
+
+    String languageOptionEn = config.language.equals("en") ? "selected" : "";
+    String languageOptionDe = config.language.equals("de") ? "selected" : "";
+
+    html += "<label for='language'>Language:</label>";
     html += "<select name='language' id='language'>";
     html += "<option value='en' " + languageOptionEn + ">English</option>";
     html += "<option value='de' " + languageOptionDe + ">Deutsch</option>";
-    html += "</select><br><br>";
+    html += "</select>";
+
     html += "<input type='submit' value='Save'>";
-    html += "</form></body></html>";
+    html += "</form>";
+    html += "</div>"; 
+    html += "</body></html>";
+
 
     AsyncWebServerResponse *response = request->beginResponse(200, "text/html", html);
     setCorsHeaders(response);

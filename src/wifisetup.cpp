@@ -249,12 +249,8 @@ bool startAP() {
         // Display AP details on LCD
         M5.Display.fillScreen(TFT_BLACK);
         M5.Display.setCursor(0, 0);
-        M5.Display.println("Device is in AP mode");
-        M5.Display.println("Device IP: " + WiFi.softAPIP().toString());
-        M5.Display.println("Device ID: " + config.deviceID);
-        M5.Display.println("SSID: " + config.apSSID);
-        M5.Display.println("Password: " + config.apPassword);
-
+        M5.Display.qrcode("http://192.168.4.1/", 52, 0,
+                  135);
         // Setup web server for AP mode
         setupWebServer();
         return true;

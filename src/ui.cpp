@@ -13,7 +13,6 @@ void initScreen() {
     M5.Display.startWrite();
     M5.Display.setRotation(1);
     M5.Display.setCursor(0, 0);
-    M5.Display.print("REC\n");
     M5.Display.setTextSize(1.5);
 }
 
