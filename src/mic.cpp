@@ -103,6 +103,8 @@ void sendAudioData()
        
         http.begin(serverUrl);
         http.addHeader("Content-Type", "application/octet-stream");
+        http.addHeader("X-User-ID", config.userID);
+        http.addHeader("X-Device-ID", config.deviceID);
 
         // Prepare audio data
         int totalSize = record_size * sizeof(int16_t);
