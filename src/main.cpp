@@ -2,6 +2,7 @@
 #include <M5Unified.h>
 #include <WiFi.h>
 #include <HTTPClient.h>
+#include <DNSServer.h>
 #include "mic.h"
 #include "config.h"
 #include "wifisetup.h"
@@ -13,6 +14,7 @@
 // Variables to track Wi-Fi status
 unsigned long previousWiFiCheck = 0;
 bool lastWiFiStatus = false; // false: not connected, true: connected
+
 
 // Task handles
 TaskHandle_t micTaskHandle = NULL;
@@ -54,6 +56,15 @@ void batteryTask(void * pvParameters) {
     }
 }
 
+void dnsTask(void * pvParameters) {
+    for (;;) {
+        if (isAPMode()) {
+            dnsServer.processNextRequest();
+        }
+        vTaskDelay(10 / portTICK_PERIOD_MS);
+    }
+}
+
 void setup(void)
 {
     // Initialize Serial for debugging
@@ -88,6 +99,7 @@ void setup(void)
     xTaskCreatePinnedToCore(rtcTask, "RTC Task", 2048, NULL, 1, &rtcTaskHandle, 1);
     xTaskCreatePinnedToCore(wifiTask, "WiFi Task", 2048, NULL, 1, &wifiTaskHandle, 1);
     xTaskCreatePinnedToCore(batteryTask, "Battery Task", 2048, NULL, 1, &batteryTaskHandle, 1);
+    xTaskCreatePinnedToCore(dnsTask, "DNS Task", 2048, NULL, 1, NULL, 1);
 }
 
 void loop() {

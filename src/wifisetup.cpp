@@ -5,6 +5,7 @@
 #include "config.h"
 #include "wifisetup.h"
 #include "M5Unified.h"
+#include <DNSServer.h>
 #include "webserver.h"
 #include <mic.h>
 
@@ -23,6 +24,11 @@ const unsigned long WIFI_CHECK_INTERVAL = 15000;
 const IPAddress AP_IP(192, 168, 4, 1);
 const IPAddress AP_GATEWAY(192, 168, 4, 1);
 const IPAddress AP_SUBNET(255, 255, 255, 0);
+
+DNSServer dnsServer;
+
+
+const byte DNS_PORT = 53;
 
 // Hostname for mDNS
 const char* mdnsHostname = "anne-wear";
@@ -60,9 +66,11 @@ bool initWiFi() {
 
     // Try to connect until timeout
     while (WiFi.status() != WL_CONNECTED && 
-           millis() - startAttemptTime < WIFI_CONNECTION_TIMEOUT) {
-        Serial.print(".");
-        M5.Display.print("."); // Update LCD with connection attempts
+        millis() - startAttemptTime < WIFI_CONNECTION_TIMEOUT) {
+        if (!isAP) {
+            Serial.print(".");
+            M5.Display.print("."); // Update LCD with connection attempts
+        }
         delay(500);
     }
 
@@ -246,6 +254,15 @@ bool startAP() {
             Serial.println("mDNS responder started in AP mode. Connect using " + String(mdnsHostname) + ".local");
         }
 
+        // Start DNS Server to redirect all domains to AP_IP
+        dnsServer.start(DNS_PORT, "*", AP_IP);
+
+        if (!MDNS.addService("http", "tcp", 80)) {
+            Serial.println("Failed to add mDNS service for HTTP in AP mode.");
+        }
+
+
+
         // Display AP details on LCD
         M5.Display.fillScreen(TFT_BLACK);
         M5.Display.setCursor(0, 0);
@@ -253,6 +270,8 @@ bool startAP() {
                   135);
         // Setup web server for AP mode
         setupWebServer();
+
+        Serial.println("Captive Portal started at: http://" + AP_IP.toString());
         return true;
     } else {
         Serial.println("Failed to start Access Point.");
