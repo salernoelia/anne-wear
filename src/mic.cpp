@@ -96,6 +96,11 @@ void updateMic()
             Serial.println("Button A released. Stopping recording and sending data...");
             isRecording = false;
             sendAudioData();
+            // clean memory for next recording
+            memset(rec_data, 0, record_size * sizeof(int16_t));
+            current_samples_collected = 0;
+            
+
         }
         displayHomeScreen();
     }

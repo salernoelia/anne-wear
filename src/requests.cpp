@@ -4,6 +4,8 @@
 #include <M5Unified.h>
 #include <ArduinoWebsockets.h>
 #include "requests.h"
+#include <map>
+#include <string>
 
 ws::WebsocketsClient client;
 
@@ -57,12 +59,34 @@ void sendAudioRequest(
         return ;
 }
 
+// Function to connect to WebSocket with custom headers
 void connectWebSocketIfNeeded() {
     if (!client.available()) {
-        client.connect(config.serverURL + "/ws");
+        // Attempt to connect to the WebSocket server
+        if (client.connect(config.serverURL + "/ws")) {
+            Serial.println("WebSocket connection initiated.");
+
+            // Create a JSON object with the custom headers
+            StaticJsonDocument<256> doc;
+            doc["X-User-ID"] = config.userID;
+            doc["X-Device-ID"] = config.deviceID;
+            doc["X-Language"] = config.language;
+
+            // Serialize JSON to a string
+            String headersJson;
+            serializeJson(doc, headersJson);
+
+            // Send the headers as a text message
+            client.send(headersJson);
+            Serial.println("Custom headers sent as JSON string.");
+
+            // Optionally, wait for a short period to ensure the message is sent
+            delay(10);
+        } else {
+            Serial.println("WebSocket connection failed.");
+        }
     }
 }
-
 
 void sendAudioPacketOverWebSocket(int16_t* data, size_t samples) {
     const size_t chunkSize = 512; // Number of samples per chunk
