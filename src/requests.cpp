@@ -2,8 +2,13 @@
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
 #include <M5Unified.h>
+#include <ArduinoWebsockets.h>
+#include "requests.h"
+
+ws::WebsocketsClient client;
 
 String serverUrl;
+
 void sendAudioRequest(
     int16_t* rec_data,
     size_t record_size
@@ -50,4 +55,40 @@ void sendAudioRequest(
         http.end();
 
         return ;
+}
+
+void connectWebSocketIfNeeded() {
+    if (!client.available()) {
+        client.connect(config.serverURL + "/ws");
+    }
+}
+
+
+void sendAudioPacketOverWebSocket(int16_t* data, size_t samples) {
+    const size_t chunkSize = 512; // Number of samples per chunk
+    size_t offset = 0;
+
+    while (offset < samples) {
+        size_t toSend = min(chunkSize, samples - offset);
+        if (client.available()) {
+            // Send binary data as little-endian
+            client.sendBinary(reinterpret_cast<const char*>(&data[offset]), toSend * sizeof(int16_t));
+            offset += toSend;
+            // client.poll();
+            delay(1); // Adjust delay as needed
+        } else {
+            // Reconnect or handle disconnection
+            connectWebSocketIfNeeded();
+            delay(100); // Wait before retrying
+        }
+    }
+}
+
+void sendWebsocketMessageIsOver() {
+    if (client.available()) {
+        client.send("EOS");
+    } else {
+        connectWebSocketIfNeeded();
+        delay(100); // Wait before retrying
+    }
 }

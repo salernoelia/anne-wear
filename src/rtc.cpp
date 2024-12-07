@@ -100,10 +100,10 @@ void updateRTC(void) {
 
     {
         auto tm = localtime(&t);  // for local timezone.
-        Serial.printf("ESP32 %s:%04d/%02d/%02d (%s)  %02d:%02d:%02d\r\n",
-                      NTP_TIMEZONE, tm->tm_year + 1900, tm->tm_mon + 1,
-                      tm->tm_mday, wd[tm->tm_wday], tm->tm_hour, tm->tm_min,
-                      tm->tm_sec);
+        // Serial.printf("ESP32 %s:%04d/%02d/%02d (%s)  %02d:%02d:%02d\r\n",
+        //               NTP_TIMEZONE, tm->tm_year + 1900, tm->tm_mon + 1,
+        //               tm->tm_mday, wd[tm->tm_wday], tm->tm_hour, tm->tm_min,
+        //               tm->tm_sec);
 
         timeinfo = *tm;
         currentTime = String(tm->tm_hour) + ":" + String(tm->tm_min) + ":" + String(tm->tm_sec);
