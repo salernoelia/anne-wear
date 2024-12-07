@@ -36,7 +36,6 @@ void animateAudioWave (
                 M5.Display.setCursor(0, 0);
 
                 int32_t w = M5.Display.width();
-                Serial.println(w);
                 if (w > record_length - 1) { 
                     if (record_length - 1 >= 240) {
                         w = 240;  

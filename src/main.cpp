@@ -70,9 +70,8 @@ void setup(void)
 
     bool connected = initWiFi();
     lastWiFiStatus = connected;
-    
-    M5.Speaker.end();
 
+    M5.Speaker.end();
 
     initScreen();
     initRTC();
