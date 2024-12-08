@@ -76,6 +76,14 @@ void connectWebSocketIfNeeded() {
             String headersJson;
             serializeJson(doc, headersJson);
 
+            client.onMessage([](ws::WebsocketsClient &c, ws::WebsocketsMessage message) {
+                Serial.println("Received WebSocket message:");
+                Serial.println(message.data());
+                // turn string into WAV file and play 
+                // M5.Speaker.playWav((uint8_t*)message.data().c_str());
+            });
+
+
             // Send the headers as a text message
             client.send(headersJson);
             Serial.println("Custom headers sent as JSON string.");

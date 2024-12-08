@@ -104,5 +104,6 @@ void setup(void)
 
 void loop() {
     M5.update();
+    client.poll();
     delay(10);
 }
