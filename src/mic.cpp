@@ -39,7 +39,7 @@ void initMic()
 void updateMic()
 {
     // Check if Button A is being held
-    if (M5.BtnA.isHolding() && WiFi.status() == WL_CONNECTED && checkIfServerRespondsOK())
+    if (M5.BtnA.isHolding())
     {
         M5.Display.clear();
         if (!isRecording)
@@ -94,6 +94,8 @@ void updateMic()
         
             // Stop recording
             Serial.println("Button A released. Stopping recording and sending data...");
+            M5.Display.clear();
+
             isRecording = false;
             sendAudioData();
             // clean memory for next recording
@@ -106,7 +108,7 @@ void updateMic()
         }
         displayHomeScreen();
     }
-}
+};
 
 void sendAudioData()
 {

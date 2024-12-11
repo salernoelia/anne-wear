@@ -101,6 +101,7 @@ void animateAudioWave (
 }
 
 void displayHomeScreen() {
+    
 
     if (needsScreenClear == true) {
         M5.Display.clear();
@@ -129,3 +130,13 @@ void displayHomeScreen() {
     M5.Display.display();
 
 }   
+
+void displayErrorState(const String& errorMessage)
+{
+    M5.Display.clear();
+    M5.Display.setCursor(10, 10);
+    M5.Display.setTextSize(2);
+    M5.Display.setTextColor(TFT_RED);
+    M5.Display.println(errorMessage);
+    // Optionally, add more details or a retry mechanism
+}

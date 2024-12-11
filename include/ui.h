@@ -26,6 +26,7 @@ void animateAudioWave(
 
 void displayAnimation(const uint16_t* emotion);
 SpriteSheet getCurrentSpriteSheet(const String& emotion);
+void displayErrorState(const String& errorMessage);
 
 
 
