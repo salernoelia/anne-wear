@@ -7,7 +7,9 @@
 #include "battery.h"
 #include "sprites/anne_logo.h"
 #include "sprites/cute_smile.h"
+#include "sprites/wifi_ico.h"
 #include "ui.h"
+#include "wifisetup.h"
 
 
 
@@ -101,7 +103,7 @@ void animateAudioWave (
 }
 
 void displayHomeScreen() {
-    
+
 
     if (needsScreenClear == true) {
         M5.Display.clear();
@@ -120,6 +122,12 @@ void displayHomeScreen() {
 
     M5.Display.print(currentTime);
     M5.Display.setCursor(0, 20);
+
+    if (WiFi.status() != WL_CONNECTED) {
+        M5.Display.pushImage(M5.Display.width()/2, 0, 16, 16, wifi_off);
+    } else {
+        M5.Display.pushImage(M5.Display.width()/2, 0, 16, 16, wifi_on);
+    }
 
     M5.Display.setCursor(M5.Display.width()-42, 0);
     M5.Display.print(batteryLevelInPercent);

@@ -7,6 +7,7 @@
 #include "config.h"
 #include "requests.h"
 #include "ui.h"
+#include "wifisetup.h"
 
 // Audio recording variables
 int16_t prev_y[record_length];

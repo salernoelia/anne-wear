@@ -8,6 +8,7 @@
 #include <DNSServer.h>
 #include "webserver.h"
 #include <mic.h>
+#include "requests.h"
 
 // Constants
 const unsigned long WIFI_CONNECTION_TIMEOUT = 15000;
@@ -26,6 +27,8 @@ const IPAddress AP_GATEWAY(192, 168, 4, 1);
 const IPAddress AP_SUBNET(255, 255, 255, 0);
 
 DNSServer dnsServer;
+
+bool serverOK = false;
 
 
 const byte DNS_PORT = 53;
@@ -322,6 +325,7 @@ void checkConnectionStatus(bool &lastWiFiStatus, unsigned long &previousWiFiChec
         previousWiFiCheck = currentMillis;
 
         if (WiFi.status() != WL_CONNECTED && !isAPMode()) {
+            serverOK = false;
             Serial.println("WiFi disconnected, attempting to reconnect...");
             bool reconnected = reconnectWiFi();
             if (reconnected) {
@@ -331,9 +335,13 @@ void checkConnectionStatus(bool &lastWiFiStatus, unsigned long &previousWiFiChec
             }
         } else if (WiFi.status() == WL_CONNECTED && !lastWiFiStatus) {
             Serial.println("WiFi connected.");
+            Serial.println("Server OK: " + String(serverOK));
+
             lastWiFiStatus = true;
         } else if (isAPMode() && WiFi.status() == WL_CONNECTED) {
+            serverOK = false;
             // Handle unexpected scenario where connected to WiFi while in AP mode
+
             Serial.println("Connected to WiFi while in AP mode. Stopping AP mode.");
             bool destroyed = destroyAP();
             if (destroyed) {

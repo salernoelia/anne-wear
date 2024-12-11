@@ -46,7 +46,7 @@ void wifiTask(void * pvParameters) {
         xSemaphoreTake(wifiMutex, portMAX_DELAY);
         checkConnectionStatus(lastWiFiStatus, previousWiFiCheck);
         xSemaphoreGive(wifiMutex);
-        vTaskDelay(10000 / portTICK_PERIOD_MS);
+        vTaskDelay(500 / portTICK_PERIOD_MS);
     }
 }
 

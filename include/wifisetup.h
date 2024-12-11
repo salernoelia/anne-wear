@@ -12,6 +12,8 @@ bool destroyAP();
 bool isAPMode();
 void checkConnectionStatus(bool &lastWiFiStatus, unsigned long &previousWiFiCheck);
 
+extern bool serverOK;
+
 extern DNSServer dnsServer;
 
 #endif // WIFISETUP_H
