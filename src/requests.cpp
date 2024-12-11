@@ -11,6 +11,32 @@ ws::WebsocketsClient client;
 
 String serverUrl;
 
+
+
+bool checkIfServerRespondsOK() {
+    HTTPClient http;
+    if (config.serverURL == "")
+    {
+        serverUrl = "https://estation.space/ok";
+    } else {
+        serverUrl = config.serverURL + "/ok";
+    }
+
+    http.begin(serverUrl);
+    int httpResponseCode = http.GET();
+
+    if (httpResponseCode == 200) {
+        Serial.println("Server is up.");
+        http.end();
+        return true;
+    } else {
+        Serial.println("Server is down.");
+        http.end();
+        return false;
+    }
+}
+
+
 void sendAudioRequest(
     int16_t* rec_data,
     size_t record_size
@@ -44,7 +70,14 @@ void sendAudioRequest(
             // Parse the JSON response and display the transcription (if needed)
             // Example:
             DynamicJsonDocument doc(1024);
-            deserializeJson(doc, response);
+            DeserializationError error = deserializeJson(doc, response);
+            if (error) {
+                Serial.print("deserializeJson() failed: ");
+                Serial.println(error.c_str());
+                // Handle the error accordingly
+                return;
+            }
+
             String transcription = doc["transcription"];
             M5.Display.clear();
             M5.Display.setCursor(0, 0);
@@ -92,6 +125,7 @@ void connectWebSocketIfNeeded() {
             delay(10);
         } else {
             Serial.println("WebSocket connection failed.");
+            return;
         }
     }
 }
@@ -111,7 +145,7 @@ void sendAudioPacketOverWebSocket(int16_t* data, size_t samples) {
         } else {
             // Reconnect or handle disconnection
             connectWebSocketIfNeeded();
-            delay(100); // Wait before retrying
+            break; 
         }
     }
 }
@@ -122,5 +156,12 @@ void sendWebsocketMessageIsOver() {
     } else {
         connectWebSocketIfNeeded();
         delay(100); // Wait before retrying
+
+        if (client.available()) {
+            client.send("EOS");
+        } else {
+            Serial.println("Failed to send EOS message.");
+            return;
+        }
     }
 }

@@ -15,4 +15,6 @@ constexpr size_t record_samplerate = 16000;
 
 extern int16_t* rec_data;
 
+extern bool isRecording;
+
 #endif // MIC_H

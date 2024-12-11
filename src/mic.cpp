@@ -39,7 +39,7 @@ void initMic()
 void updateMic()
 {
     // Check if Button A is being held
-    if (M5.BtnA.isHolding())
+    if (M5.BtnA.isHolding() && WiFi.status() == WL_CONNECTED && checkIfServerRespondsOK())
     {
         M5.Display.clear();
         if (!isRecording)
@@ -101,6 +101,8 @@ void updateMic()
             current_samples_collected = 0;
             
 
+        } else {
+            delay(500);
         }
         displayHomeScreen();
     }

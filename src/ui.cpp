@@ -2,18 +2,52 @@
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
 #include <M5Unified.h>
+#include "mic.h"
 #include "rtc.h"
 #include "battery.h"
+#include "sprites/anne_logo.h"
+#include "sprites/cute_smile.h"
+#include "ui.h"
+
 
 
 bool needsScreenClear = false;
+String currentEmotion = "cute_smile";
+
+SpriteSheet getCurrentSpriteSheet(const String& emotion) {
+    if (emotion == "cute_smile") {
+        return SpriteSheet{ cute_smile_sheet, cute_smile_frameCount };
+    }
+    // Add more conditions for other emotions
+    else {
+        return SpriteSheet{ cute_smile_sheet, cute_smile_frameCount };
+    }
+}
+
+
+
+void displayAnimation(const uint16_t* frame) {
+    // Clear the previous sprite with rect
+    // Calculate half dimensions for centering
+    int halfWidth = 96 / 2;
+    int halfHeight = 96 / 2;
+
+    M5.Display.drawRect(M5.Display.width() / 2 - halfWidth, M5.Display.height() / 2 - halfHeight, 96, 96, TFT_BLACK);
+    M5.Display.pushImage(M5.Display.width() / 2 - halfWidth, M5.Display.height() / 2 - halfHeight, 96, 96, frame);
+   
+
+    // M5.Display.display();
+}
+
 
 void initScreen() {
-
     M5.Display.startWrite();
     M5.Display.setRotation(1);
     M5.Display.setCursor(0, 0);
     M5.Display.setTextSize(1.5);
+    M5.Display.pushImage(M5.Display.width()/2-32, M5.Display.height()/2 -32, 64, 64, anne_logo);
+    needsScreenClear = true;
+
 }
 
 void animateAudioWave (
@@ -67,22 +101,31 @@ void animateAudioWave (
 }
 
 void displayHomeScreen() {
+
     if (needsScreenClear == true) {
         M5.Display.clear();
         needsScreenClear = false;
     }
-    M5.Display.setCursor(0, 0);
-    M5.Display.print("Home Screen");
-    M5.Display.setCursor(0, 20);
-    M5.Display.drawRect(0, 20, 240, 40);
-    M5.Display.print(currentTime);
 
-    M5.Display.setCursor(0, 40);
-    M5.Display.print("Battery Level: ");
-    M5.Display.print(batteryLevelinMV);
-    M5.Display.print("mV");
+    if (isRecording){
+        return;
+    }
+
+    calculateBatteryLevelSprite();
+
+    M5.Display.setCursor(0, 0);
+    M5.Display.setColor(TFT_DARKGRAY);
+    M5.Display.setColor(TFT_WHITE);
+
+    M5.Display.print(currentTime);
+    M5.Display.setCursor(0, 20);
+
+    M5.Display.setCursor(M5.Display.width()-42, 0);
+    M5.Display.print(batteryLevelInPercent);
+    M5.Display.print("%");
+
+    // M5.Display.pushImage(M5.Display.width()/2-48, M5.Display.height()/2 -48, 96, 96, cute_smile1);
 
     M5.Display.display();
 
-
-}
+}   

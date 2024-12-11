@@ -3,9 +3,10 @@
 
 #include "M5StickCPlus2.h"
 
-void batteryLevel();
+void calculateBatteryLevelSprite();
 
-extern int batteryLevelinMV;
+extern int batteryCapacityInMv;
+extern int batteryLevelInPercent;
 
 
 #endif // BATTERY_H

@@ -1,7 +1,9 @@
 {
   "idf.port": "/dev/tty.wchusbserial575C0295301",
   "files.associations": {
+    "*.dbclient-js": "javascript",
     ".fantomasignore": "ignore",
-    "memory": "cpp"
+    "memory": "cpp",
+    "regex": "cpp"
   }
 }

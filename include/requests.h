@@ -10,6 +10,10 @@ extern ws::WebsocketsClient client;
 #include <ArduinoJson.h> // ArduinoJson for handling JSON data
 #include <M5Unified.h>   // M5Unified for M5Stack display
 
+
+
+bool checkIfServerRespondsOK();
+
 // Function prototype
 void sendAudioRequest(
     int16_t* rec_data,  // Audio data received

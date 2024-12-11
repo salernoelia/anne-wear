@@ -19,6 +19,7 @@ struct Config {
     String password;
     IPAddress ipaddress;
     String serverURL;
+    bool setupComplete;
 };
 
 // External declaration of the global config variable

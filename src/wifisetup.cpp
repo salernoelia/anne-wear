@@ -30,6 +30,8 @@ DNSServer dnsServer;
 
 const byte DNS_PORT = 53;
 
+
+
 // Hostname for mDNS
 const char* mdnsHostname = "anne-wear";
 
@@ -44,23 +46,10 @@ const char* mdnsHostname = "anne-wear";
  */
 bool initWiFi() {
     // Display initial status on LCD
-    M5.Display.clear();
-    M5.Display.setRotation(1);
-    M5.Display.setTextSize(2);
-    M5.Display.setTextColor(TFT_WHITE, TFT_BLACK);
-    M5.Display.setCursor(0, 0);
-    M5.Display.println("Connecting to WiFi...");
 
     // Attempt to connect to WiFi
     WiFi.mode(WIFI_STA);
     WiFi.begin(config.ssid, config.password);
-
-    Serial.println(config.ssid);
-
-    M5.Display.print("Connecting to: ");
-    M5.Display.println(config.ssid);
-
-    M5.Display.clear();
 
     unsigned long startAttemptTime = millis();
 
@@ -69,7 +58,6 @@ bool initWiFi() {
         millis() - startAttemptTime < WIFI_CONNECTION_TIMEOUT) {
         if (!isAP) {
             Serial.print(".");
-            M5.Display.print("."); // Update LCD with connection attempts
         }
         delay(500);
     }
@@ -92,19 +80,6 @@ bool initWiFi() {
         } else {
             Serial.println("mDNS responder started. You can now connect using " + String(mdnsHostname) + ".local");
         }
-
-        // Display configuration on LCD
-        M5.Display.fillScreen(TFT_BLACK);
-        M5.Display.setCursor(0, 0);
-        M5.Display.println("WiFi Connected!");
-        M5.Display.println("Device ID: " + config.deviceID);
-        M5.Display.println("SSID: " + config.ssid);
-        M5.Display.println("IP Address: " + config.ipaddress.toString());
-
-        // Print configuration to Serial
-        Serial.println("Device ID: " + config.deviceID);
-        Serial.println("SSID: " + config.ssid);
-        Serial.println("IP Address: " + config.ipaddress.toString());
 
         // Setup web server after WiFi is connected
         setupWebServer();
@@ -174,15 +149,6 @@ bool reconnectWiFi() {
         } else {
             Serial.println("mDNS responder started. You can now connect using " + String(mdnsHostname) + ".local");
         }
-
-        // Update LCD
-        M5.Display.fillScreen(TFT_BLACK);
-        M5.Display.setCursor(0, 0);
-        M5.Display.println("WiFi Connected!");
-        M5.Display.println("Device ID: " + config.deviceID);
-        M5.Display.println("SSID: " + config.ssid);
-        M5.Display.println("IP Address: " + config.ipaddress.toString());
-
         // Restart web server
         setupWebServer();
 
@@ -228,14 +194,18 @@ bool startAP() {
         return true;
     }
 
+    // Explicitly set WiFi mode to AP
+    WiFi.mode(WIFI_AP);
+
     // Set fixed IP configuration for AP
     if (!WiFi.softAPConfig(AP_IP, AP_GATEWAY, AP_SUBNET)) {
         Serial.println("AP Config failed.");
         return false;
     }
 
-    // Start softAP with fixed IP
-    bool apStarted = WiFi.softAP(config.apSSID.c_str(), config.apPassword.c_str());
+    // Start softAP with fixed IP and specify a channel with less interference
+    int channel = 6; // Choose a channel like 1, 6, or 11 to minimize interference
+    bool apStarted = WiFi.softAP(config.apSSID.c_str(), config.apPassword.c_str(), channel);
 
     if (apStarted) {
         isAP = true;
@@ -261,13 +231,11 @@ bool startAP() {
             Serial.println("Failed to add mDNS service for HTTP in AP mode.");
         }
 
-
-
         // Display AP details on LCD
         M5.Display.fillScreen(TFT_BLACK);
         M5.Display.setCursor(0, 0);
-        M5.Display.qrcode("http://192.168.4.1/", 52, 0,
-                  135);
+        M5.Display.qrcode("http://192.168.4.1/", 52, 0, 135);
+
         // Setup web server for AP mode
         setupWebServer();
 
@@ -278,6 +246,7 @@ bool startAP() {
         return false;
     }
 }
+
 
 /**
  * @brief Stop the Access Point (AP) mode.
@@ -292,7 +261,10 @@ bool destroyAP() {
         return true; // Not running, considered as success
     }
 
-    // Set WiFi mode to WIFI_STA to ensure AP is disabled
+    // Stop mDNS before changing WiFi mode
+    MDNS.end();
+
+    // Set WiFi mode to STA to ensure AP is disabled
     WiFi.mode(WIFI_STA);
     delay(1000); // Allow time for mode switch
 
@@ -300,10 +272,6 @@ bool destroyAP() {
     bool apStopped = WiFi.softAPdisconnect(true);
     if (apStopped) {
         Serial.println("Access Point stopped.");
-
-        // Stop mDNS in AP mode
-        MDNS.end();
-
         isAP = false;
 
         // Clear or update LCD as needed
@@ -323,9 +291,6 @@ bool destroyAP() {
         if (WiFi.getMode() == WIFI_STA && WiFi.softAPgetStationNum() == 0) {
             isAP = false;
             Serial.println("Access Point forcefully stopped by switching to STA mode.");
-
-            // Stop mDNS if it was started in AP mode
-            MDNS.end();
 
             // Clear or update LCD as needed
             M5.Display.fillScreen(TFT_BLACK);
