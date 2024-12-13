@@ -4,19 +4,94 @@
 #include <M5Unified.h>
 #include <ArduinoWebsockets.h>
 #include "requests.h"
+#include "ui.h" // Include the header file where displayErrorState is declared
 #include <map>
+
 #include <string>
 
+namespace ws = websockets;
 ws::WebsocketsClient client;
 
 String serverUrl;
 
+// --- WebSocket Connection States ---
+typedef enum {
+    WS_DISCONNECTED,
+    WS_CONNECTING,
+    WS_CONNECTED,
+    WS_HANDSHAKE_SENT,
+    WS_HANDSHAKE_RECEIVED,
+    WS_ERROR
+} WebSocketState;
 
+WebSocketState wsState = WS_DISCONNECTED;
+
+static bool websocketReady = false; // This might not be needed anymore if you rely solely on wsState
+static unsigned long lastReconnectAttempt = 0;
+static unsigned long lastPingSent = 0;
+const unsigned long pingInterval = 30000; // Send a ping every 30 seconds
+
+// --- Error States ---
+typedef enum {
+    ERROR_NONE = 0,
+    ERROR_SERVER_UNREACHABLE,
+    ERROR_WS_CONNECT_FAILED,
+    ERROR_WS_HANDSHAKE_TIMEOUT,
+    ERROR_WS_SEND_FAILED,
+    ERROR_WS_RECEIVE_FAILED,
+    ERROR_WS_CLOSED_UNEXPECTEDLY,
+    // ... Add more error states as needed
+} ErrorState;
+
+ErrorState lastError = ERROR_NONE;
+
+// --- Function to handle errors ---
+void handleError(ErrorState error) {
+    lastError = error;
+    wsState = WS_ERROR; // Put WebSocket in error state
+
+    // Display error message on the screen (consider adding a dedicated error display function in ui.h)
+    switch (error) {
+        case ERROR_SERVER_UNREACHABLE:
+            Serial.println("Error: Server unreachable.");
+            displayErrorState("Server unreachable");
+            break;
+        case ERROR_WS_CONNECT_FAILED:
+            Serial.println("Error: WebSocket connection failed.");
+            displayErrorState("WS connect failed");
+            break;
+        case ERROR_WS_HANDSHAKE_TIMEOUT:
+            Serial.println("Error: WebSocket handshake timeout.");
+            displayErrorState("WS handshake timeout");
+            break;
+        case ERROR_WS_SEND_FAILED:
+            Serial.println("Error: Failed to send data over WebSocket.");
+            displayErrorState("WS send failed");
+            break;
+        case ERROR_WS_RECEIVE_FAILED:
+            Serial.println("Error: Failed to receive data over WebSocket.");
+            displayErrorState("WS receive failed");
+            break;
+        case ERROR_WS_CLOSED_UNEXPECTEDLY:
+            Serial.println("Error: WebSocket closed unexpectedly.");
+            displayErrorState("WS closed");
+            break;
+        // ... Handle other error states
+        default:
+            Serial.println("Error: Unknown error.");
+            displayErrorState("Unknown error");
+            break;
+    }
+
+    // Add logic here to attempt recovery (e.g., retry connection after a delay) or halt the system
+    // based on the error severity.
+    // For now, we'll just reset the connection attempt timer to allow for reconnection attempts.
+    lastReconnectAttempt = 0;
+}
 
 bool checkIfServerRespondsOK() {
     HTTPClient http;
-    if (config.serverURL == "")
-    {
+    if (config.serverURL.isEmpty()) {
         serverUrl = "https://estation.space/ok";
     } else {
         serverUrl = config.serverURL + "/ok";
@@ -25,143 +100,192 @@ bool checkIfServerRespondsOK() {
     http.begin(serverUrl);
     int httpResponseCode = http.GET();
 
-    if (httpResponseCode == 200) {
+    if (httpResponseCode == HTTP_CODE_OK) {
         Serial.println("Server is up.");
         http.end();
         return true;
     } else {
-        Serial.println("Server is down.");
+        Serial.print("Server is down. HTTP Response code: ");
+        Serial.println(httpResponseCode);
         http.end();
+        handleError(ERROR_SERVER_UNREACHABLE);
         return false;
     }
 }
 
+// Function to connect to WebSocket with custom headers and handle connection states
+void connectWebSocketIfNeeded() {
+    if (wsState == WS_CONNECTED || wsState == WS_CONNECTING) {
+        return; // Already connected or connecting
+    }
 
-void sendAudioRequest(
-    int16_t* rec_data,
-    size_t record_size
-) {
-          HTTPClient http;
-        if (config.serverURL == "")
-        {
-            serverUrl = "http://192.168.1.108:1323/ConversationHandler";
+    unsigned long now = millis();
+    if (now - lastReconnectAttempt < 5000) {
+        return; // Avoid rapid reconnect attempts
+    }
+    lastReconnectAttempt = now;
+
+    wsState = WS_CONNECTING; // Indicate that we are attempting to connect
+    Serial.println("Attempting to connect to WebSocket...");
+
+    if (client.connect(config.serverURL + "/ws")) {
+        Serial.println("WebSocket connection initiated.");
+        wsState = WS_HANDSHAKE_SENT;
+
+        // Send headers JSON
+        StaticJsonDocument<256> doc;
+        doc["X-User-ID"] = config.userID;
+        doc["X-Device-ID"] = config.deviceID;
+        doc["X-Language"] = config.language;
+        String headersJson;
+        serializeJson(doc, headersJson);
+
+        if (client.send(headersJson)) {
+            Serial.println("Custom headers sent.");
         } else {
-            serverUrl = config.serverURL + "/ConversationHandler";
+            Serial.println("Failed to send custom headers.");
+            handleError(ERROR_WS_SEND_FAILED);
+            client.close();
+            wsState = WS_DISCONNECTED;
+            return;
         }
-       
-        http.begin(serverUrl);
-        http.addHeader("Content-Type", "application/octet-stream");
-        http.addHeader("X-User-ID", config.userID);
-        http.addHeader("X-Device-ID", config.deviceID);
-        http.addHeader("X-Language", config.language);
 
-        // Prepare audio data
-        int totalSize = record_size * sizeof(int16_t);
-
-        uint8_t* audioData = (uint8_t*)rec_data;
-
-        int httpResponseCode = http.POST(audioData, totalSize);
-
-        if (httpResponseCode > 0) {
-            String response = http.getString();
-            Serial.println("HTTP Response code: " + String(httpResponseCode));
-            Serial.println("Response: " + response);
-
-            // Parse the JSON response and display the transcription (if needed)
-            // Example:
-            DynamicJsonDocument doc(1024);
-            DeserializationError error = deserializeJson(doc, response);
-            if (error) {
-                Serial.print("deserializeJson() failed: ");
-                Serial.println(error.c_str());
-                // Handle the error accordingly
-                return;
+        // Wait for server acknowledgment
+        unsigned long start = millis();
+        while (millis() - start < 3000) {
+            client.poll();
+            if (client.available()) {
+                ws::WebsocketsMessage msg = client.readBlocking();
+                if (msg.data() == "Headers received successfully.") {
+                    wsState = WS_CONNECTED;
+                    websocketReady = true;
+                    Serial.println("Handshake complete.");
+                    return;
+                } else {
+                    Serial.print("Received unexpected response: ");
+                    Serial.println(msg.data());
+                }
             }
-
-            String transcription = doc["transcription"];
-            M5.Display.clear();
-            M5.Display.setCursor(0, 0);
-            M5.Display.print(transcription);
-        }
-        else {
-            Serial.println("Error on sending POST: " + String(httpResponseCode));
+            delay(50);
         }
 
-        http.end();
+        Serial.println("Handshake not acknowledged.");
+        handleError(ERROR_WS_HANDSHAKE_TIMEOUT);
+        client.close();
+        wsState = WS_DISCONNECTED;
 
-        return ;
+    } else {
+        Serial.println("WebSocket connection failed.");
+        handleError(ERROR_WS_CONNECT_FAILED);
+        wsState = WS_DISCONNECTED;
+    }
 }
 
-// Function to connect to WebSocket with custom headers
-void connectWebSocketIfNeeded() {
-    if (!client.available()) {
-        // Attempt to connect to the WebSocket server
-        if (client.connect(config.serverURL + "/ws")) {
-            Serial.println("WebSocket connection initiated.");
-
-            // Create a JSON object with the custom headers
-            StaticJsonDocument<256> doc;
-            doc["X-User-ID"] = config.userID;
-            doc["X-Device-ID"] = config.deviceID;
-            doc["X-Language"] = config.language;
-
-            // Serialize JSON to a string
-            String headersJson;
-            serializeJson(doc, headersJson);
-
-            client.onMessage([](ws::WebsocketsClient &c, ws::WebsocketsMessage message) {
-                Serial.println("Received WebSocket message:");
-                Serial.println(message.data());
-                // turn string into WAV file and play 
-                // M5.Speaker.playWav((uint8_t*)message.data().c_str());
-            });
-
-
-            // Send the headers as a text message
-            client.send(headersJson);
-            Serial.println("Custom headers sent as JSON string.");
-
-            // Optionally, wait for a short period to ensure the message is sent
-            delay(10);
+void sendPingWebSocket() {
+    unsigned long now = millis();
+    if (wsState == WS_CONNECTED && now - lastPingSent > pingInterval) {
+        if (client.send("PING")) {
+            Serial.println("Sent PING to server.");
+            lastPingSent = now;
         } else {
-            Serial.println("WebSocket connection failed.");
-            return;
+            Serial.println("Failed to send PING.");
+            handleError(ERROR_WS_SEND_FAILED);
+            client.close(); // Close the connection to trigger reconnection
+            wsState = WS_DISCONNECTED;
+        }
+    } else if (wsState != WS_CONNECTED) {
+        connectWebSocketIfNeeded();
+    }
+}
+void handleWebSocketMessages() {
+    if (client.available()) {
+        ws::WebsocketsMessage msg = client.readBlocking(); // Correctly read message.
+
+        switch (msg.type()) { // Access type correctly.
+            case ws::MessageType::Text: // Correct: Use the dot operator
+                if (msg.data() == "PONG") {
+                    Serial.println("Received PONG from server.");
+                    lastPingSent = millis();
+                } else {
+                    Serial.print("Received text: ");
+                    Serial.println(msg.data());
+                }
+                break;
+
+            case ws::MessageType::Binary: // Correct
+                Serial.print("Received binary data, length: ");
+                Serial.println(msg.length());
+                break;
+
+            case ws::MessageType::Close: // Correct
+                Serial.println("Received close message from server.");
+                client.close();
+                wsState = WS_DISCONNECTED;
+                handleError(ERROR_WS_CLOSED_UNEXPECTEDLY);
+                break;
+
+            case ws::MessageType::Ping: // Correct
+                Serial.println("Received ping from server, sending pong.");
+                if (!client.send("PONG")) {
+                    Serial.println("Failed to send PONG.");
+                }
+                break;
+
+            case ws::MessageType::Pong: // Correct
+                Serial.println("Received pong from server.");
+                break;
+
+            default:
+                Serial.print("Received unknown message type: ");
+                Serial.println(static_cast<int>(msg.type()));
+                break;
         }
     }
 }
 
 void sendAudioPacketOverWebSocket(int16_t* data, size_t samples) {
-    const size_t chunkSize = 512; // Number of samples per chunk
-    size_t offset = 0;
+    if (wsState != WS_CONNECTED) {
+        connectWebSocketIfNeeded();
+        if (wsState != WS_CONNECTED) {
+            Serial.println("WebSocket not connected. Unable to send audio data.");
+            return;
+        }
+    }
 
+    const size_t chunkSize = 512;
+    size_t offset = 0;
     while (offset < samples) {
         size_t toSend = min(chunkSize, samples - offset);
-        if (client.available()) {
-            // Send binary data as little-endian
-            client.sendBinary(reinterpret_cast<const char*>(&data[offset]), toSend * sizeof(int16_t));
+        if (client.sendBinary(reinterpret_cast<const char*>(&data[offset]), toSend * sizeof(int16_t))) {
             offset += toSend;
-            // client.poll();
-            delay(1); // Adjust delay as needed
         } else {
-            // Reconnect or handle disconnection
-            connectWebSocketIfNeeded();
-            break; 
+            Serial.println("Failed to send audio packet.");
+            handleError(ERROR_WS_SEND_FAILED);
+            client.close(); // Close the connection to trigger reconnection
+            wsState = WS_DISCONNECTED;
+            return;
         }
+        delay(1); // Small delay to allow the send buffer to clear
     }
 }
 
 void sendWebsocketMessageIsOver() {
-    if (client.available()) {
-        client.send("EOS");
+    if (wsState == WS_CONNECTED) {
+        if (!client.send("EOS")) {
+            Serial.println("Failed to send EOS message.");
+            handleError(ERROR_WS_SEND_FAILED);
+            client.close(); // Close the connection to trigger reconnection
+            wsState = WS_DISCONNECTED;
+        }
     } else {
         connectWebSocketIfNeeded();
-        delay(100); // Wait before retrying
-
-        if (client.available()) {
-            client.send("EOS");
-        } else {
-            Serial.println("Failed to send EOS message.");
-            return;
+        if (wsState == WS_CONNECTED) {
+            if (!client.send("EOS")) {
+                Serial.println("Failed to send EOS message.");
+                handleError(ERROR_WS_SEND_FAILED);
+                client.close(); // Close the connection to trigger reconnection
+                wsState = WS_DISCONNECTED;
+            }
         }
     }
 }

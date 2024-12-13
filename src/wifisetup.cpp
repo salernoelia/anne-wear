@@ -73,6 +73,7 @@ bool initWiFi() {
 
         // Update config.ipaddress with the assigned IP
         config.ipaddress = WiFi.localIP();
+        connectWebSocketIfNeeded();
         if (!saveConfig()) {
             Serial.println("Failed to save updated IP address to config.");
         }

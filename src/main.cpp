@@ -30,7 +30,7 @@ SemaphoreHandle_t wifiMutex;
 void micTask(void * pvParameters) {
     for (;;) {
         updateMic();
-        vTaskDelay(10 / portTICK_PERIOD_MS);
+        vTaskDelay(2 / portTICK_PERIOD_MS);
     }
 }
 
@@ -46,6 +46,9 @@ void wifiTask(void * pvParameters) {
         xSemaphoreTake(wifiMutex, portMAX_DELAY);
         checkConnectionStatus(lastWiFiStatus, previousWiFiCheck);
         xSemaphoreGive(wifiMutex);
+        if (client.available()) {
+            sendPingWebSocket();
+        };
         vTaskDelay(500 / portTICK_PERIOD_MS);
     }
 }

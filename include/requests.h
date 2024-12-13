@@ -13,12 +13,8 @@ extern ws::WebsocketsClient client;
 
 
 bool checkIfServerRespondsOK();
-
-// Function prototype
-void sendAudioRequest(
-    int16_t* rec_data,  // Audio data received
-    size_t record_size  // Size of the audio data
-);
+void connectWebSocketIfNeeded();
+void sendPingWebSocket();
 
 void sendAudioPacketOverWebSocket(
     int16_t* rec_data,
