@@ -107,7 +107,6 @@ void updateMic()
         } else {
             delay(500);
         }
-        displayHomeScreen();
     }
 };
 

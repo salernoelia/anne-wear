@@ -3,11 +3,16 @@
 
 #include <M5Unified.h>
 
+enum Screen {
+    HOME,
+    SETTINGS,
+    ERROR
+};
+
 struct SpriteSheet {
     const uint16_t** frames; // Pointer to the array of frame pointers in PROGMEM
     int frameCount;          // Number of frames in the sprite sheet
 };
-
 
 void initScreen();
 void displayHomeScreen();
@@ -27,18 +32,12 @@ void animateAudioWave(
 void displayAnimation(const uint16_t* emotion);
 SpriteSheet getCurrentSpriteSheet(const String& emotion);
 void displayErrorState(const String& errorMessage);
+void switchScreen(Screen screen); // Function declaration
+void displaySettingsScreen();
 
-
-
-
+extern Screen currentScreen; // Declare the global variable
 extern bool needsScreenClear;
-extern const uint16_t* spriteSheets[];
-extern const size_t spriteSheetCount;
-extern const uint16_t* currentSprite;
-
 extern String currentEmotion;
 
-
-
-
 #endif // UI_H
+

@@ -11,10 +11,12 @@
 #include "ui.h"
 #include "wifisetup.h"
 
-
-
 bool needsScreenClear = false;
 String currentEmotion = "cute_smile";
+
+
+// Global variable to track the current screen
+Screen currentScreen = HOME;
 
 SpriteSheet getCurrentSpriteSheet(const String& emotion) {
     if (emotion == "cute_smile") {
@@ -26,8 +28,6 @@ SpriteSheet getCurrentSpriteSheet(const String& emotion) {
     }
 }
 
-
-
 void displayAnimation(const uint16_t* frame) {
     // Clear the previous sprite with rect
     // Calculate half dimensions for centering
@@ -36,11 +36,7 @@ void displayAnimation(const uint16_t* frame) {
 
     M5.Display.drawRect(M5.Display.width() / 2 - halfWidth, M5.Display.height() / 2 - halfHeight, 96, 96, TFT_BLACK);
     M5.Display.pushImage(M5.Display.width() / 2 - halfWidth, M5.Display.height() / 2 - halfHeight, 96, 96, frame);
-   
-
-    // M5.Display.display();
 }
-
 
 void initScreen() {
     M5.Display.startWrite();
@@ -49,7 +45,6 @@ void initScreen() {
     M5.Display.setTextSize(1.5);
     M5.Display.pushImage(M5.Display.width()/2-32, M5.Display.height()/2 -32, 64, 64, anne_logo);
     needsScreenClear = true;
-
 }
 
 void animateAudioWave (
@@ -98,13 +93,9 @@ void animateAudioWave (
                     M5.Display.writeFastVLine(x, y, h, TFT_WHITE);
                 }
                 M5.Display.display();
-
-
 }
 
 void displayHomeScreen() {
-
-
     if (needsScreenClear == true) {
         M5.Display.clear();
         needsScreenClear = false;
@@ -133,10 +124,7 @@ void displayHomeScreen() {
     M5.Display.print(batteryLevelInPercent);
     M5.Display.print("%");
 
-    // M5.Display.pushImage(M5.Display.width()/2-48, M5.Display.height()/2 -48, 96, 96, cute_smile1);
-
     M5.Display.display();
-
 }   
 
 void displayErrorState(const String& errorMessage)
@@ -145,4 +133,22 @@ void displayErrorState(const String& errorMessage)
     M5.Display.setCursor(0, 0);
     M5.Display.println(errorMessage);
     // Optionally, add more details or a retry mechanism
+}
+
+// Function to switch between screens
+void switchScreen(Screen screen) {
+    currentScreen = screen;
+    needsScreenClear = true; // Indicate that the screen needs to be cleared and redrawn
+}
+
+void displaySettingsScreen() {
+     if (needsScreenClear == true) {
+        M5.Display.clear();
+        needsScreenClear = false;
+    }
+
+    M5.Display.clear();
+    M5.Display.setCursor(0, 0);
+    M5.Display.println("Settings Screen");
+
 }

@@ -73,30 +73,31 @@ void dnsTask(void * pvParameters) {
 }
 
 void uiTask(void * pvParameters) {
-    // Initialize with the current emotion's sprite sheet
     SpriteSheet currentSheet = getCurrentSpriteSheet(currentEmotion);
     int frameIndex = 0;
 
     for (;;) {
-        if (!isRecording) {
-            // Check if the emotion has changed
-            SpriteSheet newSheet = getCurrentSpriteSheet(currentEmotion);
-            if (newSheet.frames != currentSheet.frames) {
-                currentSheet = newSheet;
-                frameIndex = 0; // Reset to the first frame of the new emotion
-            }
-
-            // Display the current frame
-            displayAnimation(currentSheet.frames[frameIndex]); // Specify the desired position
-
-            // Move to the next frame, looping back if necessary
-            frameIndex = (frameIndex + 1) % currentSheet.frameCount;
-
-            // Control the animation speed (adjust delay as needed)
-            delay(800); // Delay in milliseconds
+        switch (currentScreen) {
+            case HOME:
+                displayHomeScreen();
+                 if (!isRecording) {
+                    SpriteSheet newSheet = getCurrentSpriteSheet(currentEmotion);
+                    if (newSheet.frames != currentSheet.frames) {
+                        currentSheet = newSheet;
+                        frameIndex = 0;
+                    }
+                    displayAnimation(currentSheet.frames[frameIndex]);
+                    frameIndex = (frameIndex + 1) % currentSheet.frameCount;
+                    delay(80); // Animation speed
+                }
+                break;
+            case SETTINGS:
+                displaySettingsScreen();
+                break;
+            case ERROR:
+                displayErrorState("Error occurred!"); // Replace with your error message
+                break;
         }
-
-        // Short delay to prevent task from hogging CPU (adjust as needed)
         vTaskDelay(100 / portTICK_PERIOD_MS);
     }
 }
@@ -144,5 +145,18 @@ void setup(void)
 void loop() {
     M5.update();
     client.poll();
+
+    // Example of how to switch screens based on events
+    if (M5.BtnA.wasPressed()) {
+        needsScreenClear = true;
+        switchScreen(HOME);
+    } else if (M5.BtnB.wasPressed()) {
+        needsScreenClear = true;
+        switchScreen(SETTINGS);
+    } else if (M5.BtnC.wasPressed()) {
+        needsScreenClear = true;
+        switchScreen(ERROR);
+    }
+
     delay(10);
 }
