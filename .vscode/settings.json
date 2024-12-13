@@ -4,6 +4,9 @@
     "*.dbclient-js": "javascript",
     ".fantomasignore": "ignore",
     "memory": "cpp",
-    "regex": "cpp"
+    "regex": "cpp",
+    "array": "cpp",
+    "string": "cpp",
+    "string_view": "cpp"
   }
 }

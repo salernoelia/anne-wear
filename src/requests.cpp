@@ -4,7 +4,7 @@
 #include <M5Unified.h>
 #include <ArduinoWebsockets.h>
 #include "requests.h"
-#include "ui.h" // Include the header file where displayErrorState is declared
+#include "ui.h" 
 #include <map>
 
 #include <string>
@@ -206,6 +206,8 @@ void handleWebSocketMessages() {
                 if (msg.data() == "PONG") {
                     Serial.println("Received PONG from server.");
                     lastPingSent = millis();
+                } else if (msg.data() == "celebration") {
+                    currentEmotion = "celebration";
                 } else {
                     Serial.print("Received text: ");
                     Serial.println(msg.data());

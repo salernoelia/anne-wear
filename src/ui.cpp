@@ -7,12 +7,14 @@
 #include "battery.h"
 #include "sprites/anne_logo.h"
 #include "sprites/cute_smile.h"
+#include "sprites/celebration.h"
+#include "sprites/suspicious.h"
 #include "sprites/wifi_ico.h"
 #include "ui.h"
 #include "wifisetup.h"
 
 bool needsScreenClear = false;
-String currentEmotion = "cute_smile";
+String currentEmotion = "suspicious";
 
 
 // Global variable to track the current screen
@@ -21,6 +23,13 @@ Screen currentScreen = HOME;
 SpriteSheet getCurrentSpriteSheet(const String& emotion) {
     if (emotion == "cute_smile") {
         return SpriteSheet{ cute_smile_sheet, cute_smile_frameCount };
+    }
+    if (emotion == "celebration") {
+        Serial.println("Celebration");
+        return SpriteSheet{ celebration_sheet, celebration_frameCount };
+    }
+    if (emotion == "suspicious") {
+        return SpriteSheet{ suspicious_sheet, suspicious_frameCount };
     }
     // Add more conditions for other emotions
     else {
@@ -138,7 +147,7 @@ void displayErrorState(const String& errorMessage)
 // Function to switch between screens
 void switchScreen(Screen screen) {
     currentScreen = screen;
-    needsScreenClear = true; // Indicate that the screen needs to be cleared and redrawn
+    needsScreenClear = true;
 }
 
 void displaySettingsScreen() {

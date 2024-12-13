@@ -148,15 +148,30 @@ void loop() {
 
     // Example of how to switch screens based on events
     if (M5.BtnA.wasPressed()) {
-        needsScreenClear = true;
         switchScreen(HOME);
     } else if (M5.BtnB.wasPressed()) {
-        needsScreenClear = true;
         switchScreen(SETTINGS);
     } else if (M5.BtnC.wasPressed()) {
-        needsScreenClear = true;
         switchScreen(ERROR);
     }
+
+    client.onMessage([](ws::WebsocketsClient &c, ws::WebsocketsMessage message) {
+                Serial.println("Received WebSocket message:");
+                Serial.println(message.data());
+
+                if (message.data() == "celebration") {
+                    currentEmotion = "celebration";
+                    Serial.println("Switching to celebration animation");
+                } else if (message.data() == "suspicious") {
+                    currentEmotion = "suspicious";
+                    Serial.println("Switching to suspicious animation");
+                } else if (message.data() == "cute_smile") {
+                    currentEmotion = "cute_smile";
+                    Serial.println("Switching to cute smile animation");
+                }
+                // turn string into WAV file and play 
+                // M5.Speaker.playWav((uint8_t*)message.data().c_str());
+    });
 
     delay(10);
 }
