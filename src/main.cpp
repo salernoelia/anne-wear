@@ -11,6 +11,7 @@
 #include "rtc.h"
 #include "battery.h"
 #include "audio_manager.h"
+#include "melodies.h"
 
 
 
@@ -170,9 +171,11 @@ void loop() {
                 if (message.data() == "celebration") {
                     currentEmotion = "celebration";
                     Serial.println("Switching to celebration animation");
+                    AudioManager::getInstance()->playSound(tone2, sizeof(tone2) / sizeof(Note));
                 } else if (message.data() == "suspicious") {
                     currentEmotion = "suspicious";
                     Serial.println("Switching to suspicious animation");
+                    AudioManager::getInstance()->playSound(tone3, sizeof(tone3) / sizeof(Note));
                 } else if (message.data() == "cute_smile") {
                     currentEmotion = "cute_smile";
                     Serial.println("Switching to cute smile animation");

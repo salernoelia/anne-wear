@@ -3,6 +3,12 @@
 
 #include <M5Unified.h>
 
+
+struct Note {
+    float frequency;
+    int duration;
+};
+
 class AudioManager {
 private:
     static AudioManager* instance;
@@ -15,6 +21,7 @@ public:
     bool initSpeaker();
     void cleanupSpeaker();
     bool playStartupSound();
+    bool playSound(const Note* notes, size_t length);
     ~AudioManager();
 };
 
