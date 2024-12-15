@@ -156,32 +156,30 @@ void loop() {
     client.poll();
 
     // Example of how to switch screens based on events
-    if (M5.BtnA.wasPressed()) {
-        switchScreen(HOME);
-    } else if (M5.BtnB.wasPressed()) {
-        switchScreen(SETTINGS);
-    } else if (M5.BtnC.wasPressed()) {
-        switchScreen(ERROR);
+    if (M5.BtnB.wasPressed()) {
+        if (currentScreen == HOME) {
+            switchScreen(SETTINGS);
+        } else {
+            switchScreen(HOME);
+        } 
     }
 
     client.onMessage([](ws::WebsocketsClient &c, ws::WebsocketsMessage message) {
-                Serial.println("Received WebSocket message:");
-                Serial.println(message.data());
+        Serial.println("Received WebSocket message:");
+        Serial.println(message.data());
 
-                if (message.data() == "celebration") {
-                    currentEmotion = "celebration";
-                    Serial.println("Switching to celebration animation");
-                    AudioManager::getInstance()->playSound(tone2, sizeof(tone2) / sizeof(Note));
-                } else if (message.data() == "suspicious") {
-                    currentEmotion = "suspicious";
-                    Serial.println("Switching to suspicious animation");
-                    AudioManager::getInstance()->playSound(tone3, sizeof(tone3) / sizeof(Note));
-                } else if (message.data() == "cute_smile") {
-                    currentEmotion = "cute_smile";
-                    Serial.println("Switching to cute smile animation");
-                }
-                // turn string into WAV file and play 
-                // M5.Speaker.playWav((uint8_t*)message.data().c_str());
+        if (message.data() == "celebration") {
+            currentEmotion = "celebration";
+            Serial.println("Switching to celebration animation");
+            AudioManager::getInstance()->playSound(tone2, sizeof(tone2) / sizeof(Note));
+        } else if (message.data() == "suspicious") {
+            currentEmotion = "suspicious";
+            Serial.println("Switching to suspicious animation");
+            AudioManager::getInstance()->playSound(tone3, sizeof(tone3) / sizeof(Note));
+        } else if (message.data() == "cute_smile") {
+            currentEmotion = "cute_smile";
+            Serial.println("Switching to cute smile animation");
+        }
     });
 
     delay(10);

@@ -25,7 +25,6 @@ SpriteSheet getCurrentSpriteSheet(const String& emotion) {
         return SpriteSheet{ cute_smile_sheet, cute_smile_frameCount };
     }
     if (emotion == "celebration") {
-        Serial.println("Celebration");
         return SpriteSheet{ celebration_sheet, celebration_frameCount };
     }
     if (emotion == "suspicious") {
@@ -156,7 +155,6 @@ void displaySettingsScreen() {
         needsScreenClear = false;
     }
 
-    M5.Display.clear();
     M5.Display.setCursor(0, 0);
     M5.Display.println("Settings Screen");
 
