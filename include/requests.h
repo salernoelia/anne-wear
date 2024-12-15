@@ -22,6 +22,6 @@ void sendAudioPacketOverWebSocket(
 );
 
 void sendWebsocketMessageIsOver();
-void handleWebSocketMessage(websockets::WebsocketsMessage message);
+
 
 #endif // REQUESTS_H

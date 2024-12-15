@@ -83,6 +83,10 @@ void handleError(ErrorState error) {
             break;
     }
 
+    // Close the WebSocket connection to free resources
+    client.close();
+    wsState = WS_DISCONNECTED;
+
     // Add logic here to attempt recovery (e.g., retry connection after a delay) or halt the system
     // based on the error severity.
     // For now, we'll just reset the connection attempt timer to allow for reconnection attempts.
@@ -131,9 +135,6 @@ void connectWebSocketIfNeeded() {
     if (client.connect(config.serverURL + "/ws")) {
         Serial.println("WebSocket connection initiated.");
         wsState = WS_HANDSHAKE_SENT;
-        
-        // Set up the message handler
-        client.onMessage(handleWebSocketMessage);
 
         // Send headers JSON
         StaticJsonDocument<256> doc;
@@ -294,21 +295,3 @@ void sendWebsocketMessageIsOver() {
         }
     }
 }
-
-// Update the handler implementation
-void handleWebSocketMessage(websockets::WebsocketsMessage message) {
-    Serial.println("Received WebSocket message:");
-    Serial.println(message.data());
-
-    if (message.data() == "celebration") {
-        currentEmotion = "celebration";
-        Serial.println("Switching to celebration animation");
-    } else if (message.data() == "suspicious") {
-        currentEmotion = "suspicious";
-        Serial.println("Switching to suspicious animation");
-    } else if (message.data() == "cute_smile") {
-        currentEmotion = "cute_smile";
-        Serial.println("Switching to cute smile animation");
-    }
-}
-

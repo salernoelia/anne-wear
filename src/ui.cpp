@@ -156,6 +156,7 @@ void displaySettingsScreen() {
         needsScreenClear = false;
     }
 
+    M5.Display.clear();
     M5.Display.setCursor(0, 0);
     M5.Display.println("Settings Screen");
 
