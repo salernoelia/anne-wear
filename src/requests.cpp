@@ -83,6 +83,10 @@ void handleError(ErrorState error) {
             break;
     }
 
+    // Close the WebSocket connection to free resources
+    client.close();
+    wsState = WS_DISCONNECTED;
+
     // Add logic here to attempt recovery (e.g., retry connection after a delay) or halt the system
     // based on the error severity.
     // For now, we'll just reset the connection attempt timer to allow for reconnection attempts.

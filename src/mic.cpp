@@ -8,6 +8,7 @@
 #include "requests.h"
 #include "ui.h"
 #include "wifisetup.h"
+#include "audio_manager.h"
 
 // Audio recording variables
 int16_t prev_y[record_length];
@@ -23,25 +24,29 @@ bool isRecording = false;
 
 void initMic()
 {
-    // Initialize the microphone
+    // Double check speaker is off
+     AudioManager::getInstance()->cleanupSpeaker();
+    delay(100);
+
+    // Initialize microphone
     M5.Mic.begin();
 
     rec_data = (int16_t*)heap_caps_malloc(record_size * sizeof(int16_t), MALLOC_CAP_8BIT);
     if (rec_data == NULL) {
         Serial.println("Failed to allocate memory for rec_data");
-
+        return;
     }
 
-    memset(rec_data, 0 , record_size * sizeof(int16_t));
-    M5.Speaker.setVolume(255);
-
+    memset(rec_data, 0, record_size * sizeof(int16_t));
 }
 
 void updateMic()
-{
+{   
+
     // Check if Button A is being held
     if (M5.BtnA.isHolding())
     {
+        M5.Mic.begin();
         M5.Display.clear();
         if (!isRecording)
         {
@@ -95,6 +100,7 @@ void updateMic()
         
             // Stop recording
             Serial.println("Button A released. Stopping recording and sending data...");
+            M5.Mic.end();
             M5.Display.clear();
 
             isRecording = false;

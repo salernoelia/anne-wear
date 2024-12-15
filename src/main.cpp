@@ -10,6 +10,8 @@
 #include "ui.h"
 #include "rtc.h"
 #include "battery.h"
+#include "audio_manager.h"
+
 
 
 // Variables to track Wi-Fi status
@@ -103,15 +105,19 @@ void uiTask(void * pvParameters) {
 }
 
 
-void setup(void)
-{
-    // Initialize Serial for debugging
+void setup(void) {
     Serial.begin(9600);
-    while (!Serial); // Wait for Serial to initialize
+    while (!Serial);
 
-    // Initialize M5Unified with default configuration
     auto cfg = M5.config();
     M5.begin(cfg);
+
+    // Play startup sound with proper resource management
+    if (!AudioManager::getInstance()->playStartupSound()) {
+        Serial.println("Failed to play startup sound");
+    }
+    
+    delay(100); // Safety delay before mic init
 
     initScreen();
 
@@ -122,9 +128,11 @@ void setup(void)
     bool connected = initWiFi();
     lastWiFiStatus = connected;
 
-    M5.Speaker.end();
 
     initRTC();
+    
+    // Initialize microphone after speaker is fully cleaned up
+    delay(100);  // Additional safety delay
     initMic();
 
     
