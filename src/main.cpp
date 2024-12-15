@@ -10,6 +10,8 @@
 #include "ui.h"
 #include "rtc.h"
 #include "battery.h"
+#include "buzzer.h"
+#include "melodies.h"
 
 
 // Variables to track Wi-Fi status
@@ -46,9 +48,6 @@ void wifiTask(void * pvParameters) {
         xSemaphoreTake(wifiMutex, portMAX_DELAY);
         checkConnectionStatus(lastWiFiStatus, previousWiFiCheck);
         xSemaphoreGive(wifiMutex);
-        if (client.available()) {
-            sendPingWebSocket();
-        };
         vTaskDelay(500 / portTICK_PERIOD_MS);
     }
 }
@@ -114,6 +113,8 @@ void setup(void)
     M5.begin(cfg);
 
     initScreen();
+    initBuzzer();  // Add this line
+    playMelody(startupMelody);
 
     if (!loadConfig()) {
         Serial.println("Failed to load configuration. Using default settings.");
@@ -145,8 +146,8 @@ void setup(void)
 void loop() {
     M5.update();
     client.poll();
+    updateMelody();
 
-    // Example of how to switch screens based on events
     if (M5.BtnA.wasPressed()) {
         switchScreen(HOME);
     } else if (M5.BtnB.wasPressed()) {
@@ -154,24 +155,6 @@ void loop() {
     } else if (M5.BtnC.wasPressed()) {
         switchScreen(ERROR);
     }
-
-    client.onMessage([](ws::WebsocketsClient &c, ws::WebsocketsMessage message) {
-                Serial.println("Received WebSocket message:");
-                Serial.println(message.data());
-
-                if (message.data() == "celebration") {
-                    currentEmotion = "celebration";
-                    Serial.println("Switching to celebration animation");
-                } else if (message.data() == "suspicious") {
-                    currentEmotion = "suspicious";
-                    Serial.println("Switching to suspicious animation");
-                } else if (message.data() == "cute_smile") {
-                    currentEmotion = "cute_smile";
-                    Serial.println("Switching to cute smile animation");
-                }
-                // turn string into WAV file and play 
-                // M5.Speaker.playWav((uint8_t*)message.data().c_str());
-    });
 
     delay(10);
 }

@@ -33,7 +33,6 @@ void initMic()
     }
 
     memset(rec_data, 0 , record_size * sizeof(int16_t));
-    M5.Speaker.setVolume(255);
 
 }
 

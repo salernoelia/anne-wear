@@ -19,7 +19,7 @@ Config config = {
     "xxxx",                                // ssid
     "xxxx",                           // password
     IPAddress(192, 168, 1, 118),            // ipaddress
-    "http://192.168.1.108:1323/ConversationHandler", // serverURL
+    "http://192.168.1.108:1323", // serverURL
     "false"                                 // setupComplete
 };
 
