@@ -138,7 +138,7 @@ bool getUserTasksThatAreStillDue() {
 
     if (httpResponseCode == HTTP_CODE_OK) {
         String payload = http.getString();
-        Serial.println("Server response: " + payload);
+        // Serial.println("Server response: " + payload);
 
         // Clear previous tasks
         tasks.clear();

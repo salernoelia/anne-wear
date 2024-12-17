@@ -197,7 +197,7 @@ void displayComposerScreen() {
     if (needsScreenClear == true) {
         M5.Display.clear();
         M5.Display.println("Composer");
-        M5.Display.println("Click A=Play, Hold A=Change Tonem, Hold A Long=Clear");
+        M5.Display.println("Click A = Play, Hold A = Change Tone, \n Hold A for 3s = Clear");
         needsScreenClear = false;
     }
 
@@ -222,18 +222,18 @@ void displayComposerScreen() {
 
 void handleComposerButtons() {
     if (currentScreen != COMPOSER) return;
-    if (playbackCount == 0) {
+    if (playbackCount == 0 && compositionIndex < MAX_NOTES) {
         AudioManager::getInstance()->playTone(NOTE_HEIGHTS[currentNoteIndex], 200);
         playbackCount++;
     }
-    if (compositionIndex >= MAX_NOTES && !compositionReplayed) {
-        for(int i = 0; i < compositionIndex; i++) {
-            AudioManager::getInstance()->playTone(composition[i], 200);
-            delay(250);
-        }
-        compositionReplayed = true;
-        return;
-    };
+    // if (compositionIndex >= MAX_NOTES && !compositionReplayed) {
+    //     for(int i = 0; i < compositionIndex; i++) {
+    //         AudioManager::getInstance()->playTone(composition[i], 200);
+    //         delay(250);
+    //     }
+    //     compositionReplayed = true;
+    //     return;
+    // };
 
 
 
@@ -253,13 +253,13 @@ void handleComposerButtons() {
 
     }
 
-    if (M5.BtnA.wasClicked() && compositionIndex < MAX_NOTES) {
+    if (M5.BtnA.wasClicked()) {
         playbackCount = 0;
 
         if (compositionIndex >= MAX_NOTES) {
             for(int i = 0; i < compositionIndex; i++) {
-            AudioManager::getInstance()->playTone(composition[i], 200);
-            delay(250);
+                AudioManager::getInstance()->playTone(composition[i], 200);
+                delay(250);
             }
             return;
         }
@@ -273,9 +273,6 @@ void handleComposerButtons() {
         
         compositionIndex++;
         currentNoteIndex = 0; 
-
-
-        // AudioManager::getInstance()->playTone(NOTE_HEIGHTS[currentNoteIndex], 200);
     }
     if (M5.BtnA.pressedFor(3000) && currentScreen == COMPOSER) {
         Serial.println("clearing composition");
