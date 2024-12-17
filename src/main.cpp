@@ -112,7 +112,7 @@ void uiTask(void * pvParameters) {
                 displayErrorState("Error occurred!"); // Replace with your error message
                 break;
         }
-        vTaskDelay(100 / portTICK_PERIOD_MS);
+        vTaskDelay(50 / portTICK_PERIOD_MS);
     }
 }
 
@@ -147,9 +147,9 @@ void setup(void) {
 
     wifiMutex = xSemaphoreCreateMutex();
 
-    xTaskCreatePinnedToCore(micTask, "Mic Task", 4096, NULL, 1, &micTaskHandle, 1);
+    xTaskCreatePinnedToCore(micTask, "Mic Task", 4096, NULL, 2, &micTaskHandle, 1);
     xTaskCreatePinnedToCore(rtcTask, "RTC Task", 2048, NULL, 1, &rtcTaskHandle, 1);
-    xTaskCreatePinnedToCore(wifiTask, "WiFi Task", 2048, NULL, 1, &wifiTaskHandle, 0);
+    xTaskCreatePinnedToCore(wifiTask, "WiFi Task", 2048, NULL, 2, &wifiTaskHandle, 0);
     xTaskCreatePinnedToCore(batteryTask, "Battery Task", 2048, NULL, 1, &batteryTaskHandle, 1);
     xTaskCreatePinnedToCore(uiTask, "UI Task", 4096, NULL, 1, &uiTaskHandle, 1);
 
@@ -167,8 +167,9 @@ void loop() {
         Serial.println("Received WebSocket message:");
         Serial.println(message.data());
         if (message.data() == "celebration") {
-        currentEmotion = "celebration";
-        Serial.println("Switching to celebration animation");
+            currentEmotion = "celebration";
+            Serial.println("Switching to celebration animation");
+            
         AudioManager::getInstance()->playSound(celebration, sizeof(celebration) / sizeof(Note));
         } else if (message.data() == "suspicious") {
             currentEmotion = "suspicious";
@@ -187,13 +188,17 @@ void loop() {
             Serial.println("Switching to confused animation");
             AudioManager::getInstance()->playSound(confused, sizeof(confused) / sizeof(Note));
         } else if (message.data() == "sleep") {
-            currentEmotion = "sleep";
+            currentEmotion = "sleeping";
             Serial.println("Switching to sleep animation");
             AudioManager::getInstance()->playSound(sleeping, sizeof(sleeping) / sizeof(Note));
         } else if (message.data() == "lucky_smile") {
             currentEmotion = "lucky_smile";
             Serial.println("Switching to lucky smile animation");
             AudioManager::getInstance()->playSound(lucky_smile, sizeof(lucky_smile) / sizeof(Note));
+        } else if (message.data() == "surprised") {
+            currentEmotion = "surprised";
+            Serial.println("Switching to surprised animation");
+            AudioManager::getInstance()->playSound(surprised, sizeof(surprised) / sizeof(Note));
         }
     });
 

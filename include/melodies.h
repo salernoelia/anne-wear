@@ -4,7 +4,7 @@
 #include "audio_manager.h"
 
 
-const Note tone2[] = {
+const Note celebration[] = {
     {329.63, 119},
     {587.33, 119},
     {493.88, 119},
@@ -53,7 +53,7 @@ const Note suspicious[] = {
     {880.00, 119}
 };
 
-const Note celebration[] = {
+const Note surprised[] = {
     {349.23, 119},
     {440.00, 479},
     {523.25, 239},

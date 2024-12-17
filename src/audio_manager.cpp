@@ -50,7 +50,7 @@ bool AudioManager::playSound(const Note* notes, size_t length) {
     if (!initSpeaker()) return false;
 
     for (size_t i = 0; i < length; i++) {
-        M5.Speaker.tone(notes[i].frequency, notes[i].duration);
+        M5.Speaker.tone(notes[i].frequency * 2, notes[i].duration);
         delay(notes[i].duration + 10);
     }
 
