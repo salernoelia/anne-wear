@@ -5,10 +5,22 @@
 namespace ws = websockets;
 extern ws::WebsocketsClient client;
 
-#include "config.h"    // Include config.h to ensure config is available
-#include <HTTPClient.h> // HTTPClient library for making HTTP requests
-#include <ArduinoJson.h> // ArduinoJson for handling JSON data
-#include <M5Unified.h>   // M5Unified for M5Stack display
+#include "config.h"   
+#include <HTTPClient.h> 
+#include <ArduinoJson.h>
+#include <M5Unified.h> 
+
+struct Task {
+    int64_t ID;         
+    String UserID;      
+    String Title;       
+    String Description; 
+    String DueDate;      
+    bool Completed;     
+    String CreatedAt;  
+};
+
+extern std::vector<Task> tasks;
 
 
 
@@ -21,6 +33,7 @@ void sendAudioPacketOverWebSocket(
     size_t record_size
 );
 
+bool getUserTasksThatAreStillDue();
 void sendWebsocketMessageIsOver();
 
 

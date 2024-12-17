@@ -58,6 +58,13 @@ bool AudioManager::playSound(const Note* notes, size_t length) {
     return true;
 }
 
+void AudioManager::playTone(float frequency, int duration) {
+    if (!initSpeaker()) return;
+    M5.Speaker.tone(frequency, duration);
+    delay(duration + 10);
+    cleanupSpeaker();
+}
+
 AudioManager::~AudioManager() {
     cleanupSpeaker();
 }

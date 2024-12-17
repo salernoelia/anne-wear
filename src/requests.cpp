@@ -11,6 +11,7 @@
 
 namespace ws = websockets;
 ws::WebsocketsClient client;
+std::vector<Task> tasks; 
 
 String serverUrl;
 
@@ -48,9 +49,8 @@ ErrorState lastError = ERROR_NONE;
 // --- Function to handle errors ---
 void handleError(ErrorState error) {
     lastError = error;
-    wsState = WS_ERROR; // Put WebSocket in error state
+    wsState = WS_ERROR;
 
-    // Display error message on the screen (consider adding a dedicated error display function in ui.h)
     switch (error) {
         case ERROR_SERVER_UNREACHABLE:
             Serial.println("Error: Server unreachable.");
@@ -117,19 +117,85 @@ bool checkIfServerRespondsOK() {
     }
 }
 
+std::vector<Task>& getTasks() {
+    return tasks;
+}
+
+bool getUserTasksThatAreStillDue() {
+    HTTPClient http;
+    String serverUrl;
+
+    Serial.println("Fetching user tasks...");
+    
+    if (config.serverURL.isEmpty()) {
+        serverUrl = "https://estation.space/tasks/" + config.userID;
+    } else {
+        serverUrl = config.serverURL + "/tasks/" + config.userID;
+    }
+
+    http.begin(serverUrl);
+    int httpResponseCode = http.GET();
+
+    if (httpResponseCode == HTTP_CODE_OK) {
+        String payload = http.getString();
+        Serial.println("Server response: " + payload);
+
+        // Clear previous tasks
+        tasks.clear();
+        
+        // Allocate JsonDocument
+        DynamicJsonDocument doc(4096);
+        
+        DeserializationError error = deserializeJson(doc, payload);
+        if (error) {
+            Serial.print("Deserialize failed: ");
+            Serial.println(error.c_str());
+            http.end();
+            return false;
+        }
+
+        JsonArray array = doc.as<JsonArray>();
+        for (JsonVariant v : array) {
+            Task task;
+            task.ID = v["ID"].as<int64_t>();
+            task.UserID = v["UserID"].as<String>();
+            task.Title = v["Title"].as<String>();
+            task.Description = v["Description"].as<String>();
+            task.DueDate = v["DueDate"].as<String>();
+            task.Completed = v["Completed"].as<bool>();
+            task.CreatedAt = v["CreatedAt"].as<String>();
+            
+            // Debug output
+            Serial.println("Parsed task:");
+            Serial.println("ID: " + String(task.ID));
+            Serial.println("Title: " + task.Title);
+            Serial.println("Description: " + task.Description);
+            
+            tasks.push_back(task);
+        }
+
+        http.end();
+        return true;
+    } 
+    
+    http.end();
+    handleError(ERROR_SERVER_UNREACHABLE);
+    return false;
+}
+
 // Function to connect to WebSocket with custom headers and handle connection states
 void connectWebSocketIfNeeded() {
     if (wsState == WS_CONNECTED || wsState == WS_CONNECTING) {
-        return; // Already connected or connecting
+        return; 
     }
 
     unsigned long now = millis();
     if (now - lastReconnectAttempt < 5000) {
-        return; // Avoid rapid reconnect attempts
+        return; 
     }
     lastReconnectAttempt = now;
 
-    wsState = WS_CONNECTING; // Indicate that we are attempting to connect
+    wsState = WS_CONNECTING;
     Serial.println("Attempting to connect to WebSocket...");
 
     if (client.connect(config.serverURL + "/ws")) {
@@ -194,19 +260,20 @@ void sendPingWebSocket() {
         } else {
             Serial.println("Failed to send PING.");
             handleError(ERROR_WS_SEND_FAILED);
-            client.close(); // Close the connection to trigger reconnection
+            client.close(); 
             wsState = WS_DISCONNECTED;
         }
     } else if (wsState != WS_CONNECTED) {
         connectWebSocketIfNeeded();
     }
 }
+
 void handleWebSocketMessages() {
     if (client.available()) {
-        ws::WebsocketsMessage msg = client.readBlocking(); // Correctly read message.
+        ws::WebsocketsMessage msg = client.readBlocking();
 
-        switch (msg.type()) { // Access type correctly.
-            case ws::MessageType::Text: // Correct: Use the dot operator
+        switch (msg.type()) { 
+            case ws::MessageType::Text: 
                 if (msg.data() == "PONG") {
                     Serial.println("Received PONG from server.");
                     lastPingSent = millis();
@@ -218,26 +285,26 @@ void handleWebSocketMessages() {
                 }
                 break;
 
-            case ws::MessageType::Binary: // Correct
+            case ws::MessageType::Binary:
                 Serial.print("Received binary data, length: ");
                 Serial.println(msg.length());
                 break;
 
-            case ws::MessageType::Close: // Correct
+            case ws::MessageType::Close:
                 Serial.println("Received close message from server.");
                 client.close();
                 wsState = WS_DISCONNECTED;
                 handleError(ERROR_WS_CLOSED_UNEXPECTEDLY);
                 break;
 
-            case ws::MessageType::Ping: // Correct
+            case ws::MessageType::Ping:
                 Serial.println("Received ping from server, sending pong.");
                 if (!client.send("PONG")) {
                     Serial.println("Failed to send PONG.");
                 }
                 break;
 
-            case ws::MessageType::Pong: // Correct
+            case ws::MessageType::Pong:
                 Serial.println("Received pong from server.");
                 break;
 
@@ -267,11 +334,11 @@ void sendAudioPacketOverWebSocket(int16_t* data, size_t samples) {
         } else {
             Serial.println("Failed to send audio packet.");
             handleError(ERROR_WS_SEND_FAILED);
-            client.close(); // Close the connection to trigger reconnection
+            client.close();
             wsState = WS_DISCONNECTED;
             return;
         }
-        delay(1); // Small delay to allow the send buffer to clear
+        delay(1);
     }
 }
 
@@ -280,7 +347,7 @@ void sendWebsocketMessageIsOver() {
         if (!client.send("EOS")) {
             Serial.println("Failed to send EOS message.");
             handleError(ERROR_WS_SEND_FAILED);
-            client.close(); // Close the connection to trigger reconnection
+            client.close();
             wsState = WS_DISCONNECTED;
         }
     } else {
@@ -289,7 +356,7 @@ void sendWebsocketMessageIsOver() {
             if (!client.send("EOS")) {
                 Serial.println("Failed to send EOS message.");
                 handleError(ERROR_WS_SEND_FAILED);
-                client.close(); // Close the connection to trigger reconnection
+                client.close();
                 wsState = WS_DISCONNECTED;
             }
         }

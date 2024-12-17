@@ -15,7 +15,6 @@
 #include <typeinfo>
 #include <string>
 
-
 // Variables to track Wi-Fi status
 unsigned long previousWiFiCheck = 0;
 bool lastWiFiStatus = false; // false: not connected, true: connected
@@ -27,9 +26,13 @@ TaskHandle_t rtcTaskHandle = NULL;
 TaskHandle_t wifiTaskHandle = NULL;
 TaskHandle_t batteryTaskHandle = NULL;
 TaskHandle_t uiTaskHandle = NULL;
+TaskHandle_t buttonsTaskHandle = NULL;
+TaskHandle_t webSocketPollingTaskHandle = NULL;
 
 // Mutex handle
 SemaphoreHandle_t wifiMutex;
+
+
 
 void micTask(void * pvParameters) {
     for (;;) {
@@ -53,6 +56,14 @@ void wifiTask(void * pvParameters) {
         if (client.available()) {
             sendPingWebSocket();
         };
+        if (isAPMode()) {
+            dnsServer.processNextRequest();
+            if (M5.BtnA.wasClicked()) {
+            reconnectWiFi();
+            }
+        }
+        
+
         vTaskDelay(500 / portTICK_PERIOD_MS);
     }
 }
@@ -61,20 +72,13 @@ void batteryTask(void * pvParameters) {
     for (;;) {
         calculateBatteryLevelSprite();
         Serial.println("Free Heap: " + String(ESP.getFreeHeap()));
+        Serial.println("Free Stack: " + String(uxTaskGetStackHighWaterMark(NULL)));
 
 
         vTaskDelay(20000 / portTICK_PERIOD_MS);
     }
 }
 
-void dnsTask(void * pvParameters) {
-    for (;;) {
-        if (isAPMode()) {
-            dnsServer.processNextRequest();
-        }
-        vTaskDelay(100 / portTICK_PERIOD_MS);
-    }
-}
 
 void uiTask(void * pvParameters) {
     SpriteSheet currentSheet = getCurrentSpriteSheet(currentEmotion);
@@ -98,6 +102,12 @@ void uiTask(void * pvParameters) {
             case SETTINGS:
                 displaySettingsScreen();
                 break;
+            case ACTIVITIES:
+                displayActivitiesScreen();
+                break;
+            case COMPOSER:
+                displayComposerScreen();
+                break;
             case ERROR:
                 displayErrorState("Error occurred!"); // Replace with your error message
                 break;
@@ -107,6 +117,7 @@ void uiTask(void * pvParameters) {
 }
 
 
+
 void setup(void) {
     Serial.begin(9600);
     while (!Serial);
@@ -114,12 +125,11 @@ void setup(void) {
     auto cfg = M5.config();
     M5.begin(cfg);
 
-    // Play startup sound with proper resource management
     if (!AudioManager::getInstance()->playStartupSound()) {
         Serial.println("Failed to play startup sound");
     }
     
-    delay(100); // Safety delay before mic init
+    delay(100); 
 
     initScreen();
 
@@ -132,38 +142,26 @@ void setup(void) {
 
 
     initRTC();
-    
-    // Initialize microphone after speaker is fully cleaned up
-    delay(100);  // Additional safety delay
+    delay(100); 
     initMic();
 
-    
-    // Turn off the speaker to use the microphone
-
-    // Create a mutex
     wifiMutex = xSemaphoreCreateMutex();
 
-    // Create tasks
     xTaskCreatePinnedToCore(micTask, "Mic Task", 4096, NULL, 1, &micTaskHandle, 1);
     xTaskCreatePinnedToCore(rtcTask, "RTC Task", 2048, NULL, 1, &rtcTaskHandle, 1);
     xTaskCreatePinnedToCore(wifiTask, "WiFi Task", 2048, NULL, 1, &wifiTaskHandle, 0);
     xTaskCreatePinnedToCore(batteryTask, "Battery Task", 2048, NULL, 1, &batteryTaskHandle, 1);
-    xTaskCreatePinnedToCore(dnsTask, "DNS Task", 2048, NULL, 2, NULL, 0);
     xTaskCreatePinnedToCore(uiTask, "UI Task", 4096, NULL, 1, &uiTaskHandle, 1);
+
+    getUserTasksThatAreStillDue();
 }
 
 void loop() {
     M5.update();
-    client.poll();
 
-    // Example of how to switch screens based on events
-    if (M5.BtnB.wasPressed()) {
-        if (currentScreen == HOME) {
-            switchScreen(SETTINGS);
-        } else {
-            switchScreen(HOME);
-        } 
-    }
+
+    client.poll();
+    handleComposerButtons();
 
     client.onMessage([](ws::WebsocketsClient &c, ws::WebsocketsMessage message) {
         Serial.println("Received WebSocket message:");
@@ -197,7 +195,33 @@ void loop() {
             Serial.println("Switching to lucky smile animation");
             AudioManager::getInstance()->playSound(lucky_smile, sizeof(lucky_smile) / sizeof(Note));
         }
-        });
+    });
+
+   
+
+     if (M5.BtnB.wasClicked()) {
+            if (currentScreen == HOME) {
+                needsScreenClear = true;
+                getUserTasksThatAreStillDue();
+                
+                switchScreen(ACTIVITIES);
+            } else if (currentScreen == ACTIVITIES) {
+                needsScreenClear = true;
+                switchScreen(COMPOSER);
+            } else if (currentScreen == COMPOSER) {
+                needsScreenClear = true;
+                compositionIndex = 0;
+                memset(composition, 0, sizeof(composition));
+                needsScreenClear = true;
+                compositionReplayed = false;
+                switchScreen(SETTINGS);
+
+            } else if (currentScreen == SETTINGS) {
+                needsScreenClear = true;
+                switchScreen(HOME);
+            }
+        }
+
 
     delay(10);
 }

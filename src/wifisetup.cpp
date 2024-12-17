@@ -240,6 +240,7 @@ bool startAP() {
         M5.Display.setCursor(0, 0);
         M5.Display.qrcode("http://192.168.4.1/", 52, 0, 135);
 
+     
         // Setup web server for AP mode
         setupWebServer();
 

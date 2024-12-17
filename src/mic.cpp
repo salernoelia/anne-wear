@@ -44,7 +44,7 @@ void updateMic()
 {   
 
     // Check if Button A is being held
-    if (M5.BtnA.isHolding())
+    if (M5.BtnA.isHolding() && currentScreen == HOME)
     {
         M5.Mic.begin();
         M5.Display.clear();

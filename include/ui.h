@@ -3,8 +3,12 @@
 
 #include <M5Unified.h>
 
+#include "requests.h" 
+
 enum Screen {
     HOME,
+    ACTIVITIES,
+    COMPOSER,
     SETTINGS,
     ERROR
 };
@@ -13,6 +17,8 @@ struct SpriteSheet {
     const uint16_t** frames; // Pointer to the array of frame pointers in PROGMEM
     int frameCount;          // Number of frames in the sprite sheet
 };
+
+extern std::vector<Task> tasks;
 
 void initScreen();
 void displayHomeScreen();
@@ -32,12 +38,23 @@ void animateAudioWave(
 void displayAnimation(const uint16_t* emotion);
 SpriteSheet getCurrentSpriteSheet(const String& emotion);
 void displayErrorState(const String& errorMessage);
-void switchScreen(Screen screen); // Function declaration
+void switchScreen(Screen screen); 
 void displaySettingsScreen();
+void handleComposerButtons();
+void displayActivitiesScreen();
+void displayComposerScreen();
 
-extern Screen currentScreen; // Declare the global variable
+extern Screen currentScreen;
 extern bool needsScreenClear;
 extern String currentEmotion;
+
+extern const int MAX_NOTES;
+extern const int NOTE_HEIGHTS[];
+extern int compositionIndex;
+extern int currentNoteIndex;
+extern int composition[4];
+extern bool compositionReplayed;
+
 
 #endif // UI_H
 

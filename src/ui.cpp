@@ -19,9 +19,18 @@
 #include "sprites/wifi_ico.h"
 #include "ui.h"
 #include "wifisetup.h"
+#include "audio_manager.h"
+#include "requests.h"
 
 bool needsScreenClear = false;
 String currentEmotion = "lucky_smile";
+
+const int MAX_NOTES = 4;
+const int NOTE_HEIGHTS[] = {1000, 2000, 3000, 4000, 5000};
+int compositionIndex = 0;
+int currentNoteIndex = 0;
+int composition[MAX_NOTES] = {0};
+bool compositionReplayed = false;
 
 
 // Global variable to track the current screen
@@ -62,11 +71,8 @@ SpriteSheet getCurrentSpriteSheet(const String& emotion) {
 }
 
 void displayAnimation(const uint16_t* frame) {
-    // Clear the previous sprite with rect
-    // Calculate half dimensions for centering
     int halfWidth = 96 / 2;
     int halfHeight = 96 / 2;
-
     M5.Display.drawRect(M5.Display.width() / 2 - halfWidth, M5.Display.height() / 2 - halfHeight, 96, 96, TFT_BLACK);
     M5.Display.pushImage(M5.Display.width() / 2 - halfWidth, M5.Display.height() / 2 - halfHeight, 96, 96, frame);
 }
@@ -153,7 +159,7 @@ void displayHomeScreen() {
         M5.Display.pushImage(M5.Display.width()/2, 0, 16, 16, wifi_on);
     }
 
-    M5.Display.setCursor(M5.Display.width()-42, 0);
+    M5.Display.setCursor(M5.Display.width()-41, 0);
     M5.Display.print(batteryLevelInPercent);
     M5.Display.print("%");
 
@@ -183,4 +189,143 @@ void displaySettingsScreen() {
     M5.Display.setCursor(0, 0);
     M5.Display.println("Settings Screen");
 
+}
+
+void displayComposerScreen() {
+    M5.Display.setCursor(0, 0);
+    if (needsScreenClear == true) {
+        M5.Display.clear();
+        M5.Display.println("Composer");
+        M5.Display.println("Click A=Play, Hold A=Change Tonem, Hold A Long=Clear");
+        needsScreenClear = false;
+    }
+
+    M5.Display.setTextColor(WHITE);
+
+
+    M5.Display.setColor(WHITE);
+    for(int i = 0; i < compositionIndex; i++) {
+        int x = i * (M5.Display.width() / MAX_NOTES);
+        int height = map(composition[i], 1000, 5000, 10, 100); 
+        M5.Display.drawRect(x + 2, M5.Display.height() - height - 2, 
+                          (M5.Display.width() / MAX_NOTES) - 4, height);
+    }
+
+    if(compositionIndex < MAX_NOTES) {
+        int x = compositionIndex * (M5.Display.width() / MAX_NOTES);
+        int height = map(NOTE_HEIGHTS[currentNoteIndex], 1000, 5000, 10, 100);  
+        M5.Display.fillRect(x + 2, M5.Display.height() - height - 2, 
+                           (M5.Display.width() / MAX_NOTES) - 4, height);
+    }
+};
+
+void handleComposerButtons() {
+    if (currentScreen != COMPOSER) return;
+    if (compositionIndex >= MAX_NOTES && !compositionReplayed) {
+        for(int i = 0; i < compositionIndex; i++) {
+            AudioManager::getInstance()->playTone(composition[i], 200);
+            delay(250);
+        }
+        compositionReplayed = true;
+        return;
+    };
+
+
+
+    static int prevHeight = map(NOTE_HEIGHTS[currentNoteIndex], 1000, 5000, 10, 100);
+
+
+    if (M5.BtnA.pressedFor(300)) {
+        int x = compositionIndex * (M5.Display.width() / MAX_NOTES);
+        M5.Display.setColor(BLACK);
+        M5.Display.fillRect(x + 2, M5.Display.height() - prevHeight - 2,
+                         (M5.Display.width() / MAX_NOTES) - 4, prevHeight);
+                         
+        currentNoteIndex = (currentNoteIndex + 1) % 4;
+        prevHeight = map(NOTE_HEIGHTS[currentNoteIndex], 1000, 5000, 10, 100);
+        AudioManager::getInstance()->playTone(NOTE_HEIGHTS[currentNoteIndex], 100);
+        displayComposerScreen();
+    }
+
+    if (M5.BtnA.wasClicked() && compositionIndex < MAX_NOTES) {
+        if (compositionIndex >= MAX_NOTES) {
+            for(int i = 0; i < compositionIndex; i++) {
+            AudioManager::getInstance()->playTone(composition[i], 200);
+            delay(250);
+            }
+            return;
+        }
+        composition[compositionIndex] = NOTE_HEIGHTS[currentNoteIndex];
+        
+        for(int i = 0; i <= compositionIndex; i++) {
+            AudioManager::getInstance()->playTone(composition[i], 200);
+            delay(250);
+            displayComposerScreen();
+        }
+        
+        compositionIndex++;
+        currentNoteIndex = 0; 
+    }
+    if (M5.BtnA.pressedFor(3000) && currentScreen == COMPOSER) {
+        Serial.println("clearing composition");
+        compositionIndex = 0;
+        compositionReplayed = false;
+        currentNoteIndex = 0;
+        memset(composition, 0, sizeof(composition));
+        needsScreenClear = true;
+        displayComposerScreen();
+    }
+}
+
+
+
+void displayActivitiesScreen() {
+    if (needsScreenClear == true) {
+        M5.Display.clear();
+        needsScreenClear = false;
+    }
+
+    if (tasks.empty()) {
+        M5.Display.setCursor(0, 0);
+        M5.Display.setTextSize(1);
+        M5.Display.println("No tasks available");
+        return;
+    }
+
+    const int lineHeight = 20;
+    const int maxLines = (M5.Display.height() - lineHeight) / lineHeight;
+    static int scrollOffset = 0;
+
+    M5.Display.setCursor(0, 0);
+    M5.Display.setTextSize(1);
+    M5.Display.println("Tasks List:");
+    
+    for (int i = scrollOffset; i < min(static_cast<int>(tasks.size()), scrollOffset + maxLines); i++) {
+        int y = (i - scrollOffset + 1) * lineHeight;
+        M5.Display.setCursor(0, y);
+        
+        M5.Display.print(tasks[i].Completed ? "[X] " : "[ ] ");
+        
+        String title = tasks[i].Title;
+        if (title.length() > 20) {
+            title = title.substring(0, 24) + "... ";
+        }
+        M5.Display.print(title);
+        
+        String dueDate = tasks[i].DueDate;
+        String month = dueDate.substring(5, 7);  
+        String day = dueDate.substring(8, 10);   
+        M5.Display.setCursor(M5.Display.width() - 50, y);  
+        M5.Display.print(month + "/" + day);
+    }
+
+    // Scroll indicators if needed
+    if (scrollOffset > 0) {
+        M5.Display.setCursor(M5.Display.width() - 10, 0);
+        M5.Display.print("^");
+    }
+    if (tasks.size() > scrollOffset + maxLines) {
+        M5.Display.setCursor(M5.Display.width() - 10, M5.Display.height() - lineHeight);
+        M5.Display.print("v");
+    }
 }
