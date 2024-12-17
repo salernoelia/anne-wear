@@ -54,6 +54,7 @@ extern int compositionIndex;
 extern int currentNoteIndex;
 extern int composition[4];
 extern bool compositionReplayed;
+extern int playbackCount;
 
 
 #endif // UI_H

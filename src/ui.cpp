@@ -31,6 +31,7 @@ int compositionIndex = 0;
 int currentNoteIndex = 0;
 int composition[MAX_NOTES] = {0};
 bool compositionReplayed = false;
+int playbackCount = 0;
 
 
 // Global variable to track the current screen
@@ -221,6 +222,10 @@ void displayComposerScreen() {
 
 void handleComposerButtons() {
     if (currentScreen != COMPOSER) return;
+    if (playbackCount == 0) {
+        AudioManager::getInstance()->playTone(NOTE_HEIGHTS[currentNoteIndex], 200);
+        playbackCount++;
+    }
     if (compositionIndex >= MAX_NOTES && !compositionReplayed) {
         for(int i = 0; i < compositionIndex; i++) {
             AudioManager::getInstance()->playTone(composition[i], 200);
@@ -234,8 +239,7 @@ void handleComposerButtons() {
 
     static int prevHeight = map(NOTE_HEIGHTS[currentNoteIndex], 1000, 5000, 10, 100);
 
-
-    if (M5.BtnA.pressedFor(300)) {
+    if (M5.BtnA.pressedFor(500)) {
         int x = compositionIndex * (M5.Display.width() / MAX_NOTES);
         M5.Display.setColor(BLACK);
         M5.Display.fillRect(x + 2, M5.Display.height() - prevHeight - 2,
@@ -245,9 +249,13 @@ void handleComposerButtons() {
         prevHeight = map(NOTE_HEIGHTS[currentNoteIndex], 1000, 5000, 10, 100);
         AudioManager::getInstance()->playTone(NOTE_HEIGHTS[currentNoteIndex], 100);
         displayComposerScreen();
+        playbackCount++;
+
     }
 
     if (M5.BtnA.wasClicked() && compositionIndex < MAX_NOTES) {
+        playbackCount = 0;
+
         if (compositionIndex >= MAX_NOTES) {
             for(int i = 0; i < compositionIndex; i++) {
             AudioManager::getInstance()->playTone(composition[i], 200);
@@ -265,6 +273,9 @@ void handleComposerButtons() {
         
         compositionIndex++;
         currentNoteIndex = 0; 
+
+
+        // AudioManager::getInstance()->playTone(NOTE_HEIGHTS[currentNoteIndex], 200);
     }
     if (M5.BtnA.pressedFor(3000) && currentScreen == COMPOSER) {
         Serial.println("clearing composition");
