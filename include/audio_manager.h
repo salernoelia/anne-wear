@@ -22,6 +22,7 @@ public:
     void cleanupSpeaker();
     bool playStartupSound();
     bool playSound(const Note* notes, size_t length);
+    bool playRawSound(const uint8_t* data, size_t length);
     ~AudioManager();
 };
 

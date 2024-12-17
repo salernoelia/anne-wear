@@ -7,6 +7,8 @@
     "regex": "cpp",
     "array": "cpp",
     "string": "cpp",
-    "string_view": "cpp"
+    "string_view": "cpp",
+    "lucky_smile": "cpp",
+    "typeinfo": "cpp"
   }
 }

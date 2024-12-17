@@ -9,12 +9,19 @@
 #include "sprites/cute_smile.h"
 #include "sprites/celebration.h"
 #include "sprites/suspicious.h"
+#include "sprites/curiosity.h"
+#include "sprites/lucky_smile.h"
+#include "sprites/confused.h"
+#include "sprites/curious_talking.h"
+#include "sprites/sad.h"
+#include "sprites/sleeping.h"
+#include "sprites/surprised.h"
 #include "sprites/wifi_ico.h"
 #include "ui.h"
 #include "wifisetup.h"
 
 bool needsScreenClear = false;
-String currentEmotion = "suspicious";
+String currentEmotion = "lucky_smile";
 
 
 // Global variable to track the current screen
@@ -30,7 +37,25 @@ SpriteSheet getCurrentSpriteSheet(const String& emotion) {
     if (emotion == "suspicious") {
         return SpriteSheet{ suspicious_sheet, suspicious_frameCount };
     }
-    // Add more conditions for other emotions
+    if (emotion == "curiosity") {
+        return SpriteSheet{ curiosity_sheet, curiosity_frameCount };
+    }
+    if (emotion == "lucky_smile") {
+        return SpriteSheet{ lucky_smile_sheet, lucky_smile_frameCount };
+    }
+    if (emotion == "confused") {
+        return SpriteSheet{ confused_sheet, confused_frameCount };
+    }
+    if (emotion == "sleeping") {
+        return SpriteSheet{ sleeping_sheet, sleeping_frameCount };
+    }
+    if (emotion == "curious_talking") {
+        return SpriteSheet{ curious_talking_sheet, curious_talking_frameCount };
+    }
+    if (emotion == "surprised") {
+        return SpriteSheet{ surprised_sheet, surprised_frameCount };
+    }
+
     else {
         return SpriteSheet{ cute_smile_sheet, cute_smile_frameCount };
     }

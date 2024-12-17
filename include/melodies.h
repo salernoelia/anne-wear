@@ -11,7 +11,7 @@ const Note tone2[] = {
     {392.00, 119}
 };
 
-const Note tone3[] = {
+const Note cute_smile[] = {
     {587.33, 119},
     {659.26, 119},
     {523.25, 119},
@@ -32,7 +32,7 @@ const Note confused[] = {
     {783.99, 119}
 };
 
-const Note sleep[] = {
+const Note sleeping[] = {
     {440.00, 119},
     {440.00, 119},
     {349.23, 119},

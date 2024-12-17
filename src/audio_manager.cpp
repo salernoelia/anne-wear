@@ -1,4 +1,6 @@
 #include "audio_manager.h"
+#include "ui.h"
+#include "melodies.h"
 
 AudioManager* AudioManager::instance = nullptr;
 
@@ -55,7 +57,6 @@ bool AudioManager::playSound(const Note* notes, size_t length) {
     cleanupSpeaker();
     return true;
 }
-
 
 AudioManager::~AudioManager() {
     cleanupSpeaker();

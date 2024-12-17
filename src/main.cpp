@@ -12,7 +12,8 @@
 #include "battery.h"
 #include "audio_manager.h"
 #include "melodies.h"
-
+#include <typeinfo>
+#include <string>
 
 
 // Variables to track Wi-Fi status
@@ -167,20 +168,36 @@ void loop() {
     client.onMessage([](ws::WebsocketsClient &c, ws::WebsocketsMessage message) {
         Serial.println("Received WebSocket message:");
         Serial.println(message.data());
-
         if (message.data() == "celebration") {
-            currentEmotion = "celebration";
-            Serial.println("Switching to celebration animation");
-            AudioManager::getInstance()->playSound(tone2, sizeof(tone2) / sizeof(Note));
+        currentEmotion = "celebration";
+        Serial.println("Switching to celebration animation");
+        AudioManager::getInstance()->playSound(celebration, sizeof(celebration) / sizeof(Note));
         } else if (message.data() == "suspicious") {
             currentEmotion = "suspicious";
             Serial.println("Switching to suspicious animation");
-            AudioManager::getInstance()->playSound(tone3, sizeof(tone3) / sizeof(Note));
+            AudioManager::getInstance()->playSound(suspicious, sizeof(suspicious) / sizeof(Note));
         } else if (message.data() == "cute_smile") {
             currentEmotion = "cute_smile";
             Serial.println("Switching to cute smile animation");
+            AudioManager::getInstance()->playSound(cute_smile, sizeof(cute_smile) / sizeof(Note));
+        } else if (message.data() == "curiosity") {
+            currentEmotion = "curiosity";
+            Serial.println("Switching to curiosity animation");
+            AudioManager::getInstance()->playSound(curiosity, sizeof(curiosity) / sizeof(Note));
+        } else if (message.data() == "confused") {
+            currentEmotion = "confused";
+            Serial.println("Switching to confused animation");
+            AudioManager::getInstance()->playSound(confused, sizeof(confused) / sizeof(Note));
+        } else if (message.data() == "sleep") {
+            currentEmotion = "sleep";
+            Serial.println("Switching to sleep animation");
+            AudioManager::getInstance()->playSound(sleeping, sizeof(sleeping) / sizeof(Note));
+        } else if (message.data() == "lucky_smile") {
+            currentEmotion = "lucky_smile";
+            Serial.println("Switching to lucky smile animation");
+            AudioManager::getInstance()->playSound(lucky_smile, sizeof(lucky_smile) / sizeof(Note));
         }
-    });
+        });
 
     delay(10);
 }
