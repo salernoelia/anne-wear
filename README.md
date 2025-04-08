@@ -1,6 +1,8 @@
 ![anne-wear-hero](anne-wear-hero.jpg)
 
-# anne Wear
+# Anne Wear
+
+[Project Info](https://eliasalerno.ch/work/anne)
 
 Anne Wear is a playful, user-first, personalized companion for children with ADHD, combining proven teaching methods, artificial intelligence, and haptic feedback.
 
