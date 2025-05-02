@@ -1,6 +1,6 @@
-![anne-wear-hero](anne-wear-hero.jpg)
-
 # Anne Wear
+
+![anne-wear-hero](anne-wear-hero.jpg)
 
 [Project Info](https://eliasalerno.ch/work/anne)
 
